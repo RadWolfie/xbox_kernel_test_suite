@@ -18,6 +18,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      compiler-ver: 8
     steps:
       - name: Checkout nxdk
         uses: actions/checkout@v2
@@ -31,11 +33,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install flex bison clang-8 llvm-8 lld-8 -y
+          sudo apt-get install flex bison clang-${{env.compiler-ver}} llvm-${{env.compiler-ver}} lld-${{env.compiler-ver}} -y
       - name: Build
         working-directory: projects/xbox_kernel_test_suite
         run: |
-          export PATH=$PATH:/usr/lib/llvm-8/bin
+          export PATH=$PATH:/usr/lib/llvm-${{env.compiler-ver}}/bin
           make -j$(nproc)
       - uses: actions/upload-artifact@v2
         with:
