@@ -31,10 +31,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install flex bison clang llvm lld -y
+          sudo apt-get install flex bison clang-8 llvm-8 lld-8 -y
       - name: Build
         working-directory: projects/xbox_kernel_test_suite
-        run: make -j$(nproc)
+        run: |
+          export PATH=$PATH:/usr/lib/llvm-8/bin
+          make -j$(nproc)
       - uses: actions/upload-artifact@v2
         with:
           name: default.xbe
