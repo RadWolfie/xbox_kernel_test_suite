@@ -132,7 +132,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                     ehc_params->callback_func(ehc_params->callback_param);
 
                     // For continue execution, this should be the last step to process
-                    assert_ExceptionGenCheck(&except_steps, 15, &test_passed);
+                    assert_ExceptionGenCheck(&except_steps, 14, &test_passed);
                 }
                 __except(assert_ExceptionGenCheck(&except_steps, 12, &test_passed),
                          assert_ExceptionHandlerCatcher(ehc_params,
@@ -146,7 +146,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                 }
             }
             __finally {
-                assert_ExceptionGenCheck(&except_steps, 14, &test_passed);
+                assert_ExceptionGenCheck(&except_steps, 15, &test_passed);
             }
         }
         // This triggered maybe unwind local variables back to step 12.
