@@ -115,19 +115,6 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
 
     // Force modify to skip trigger raise again.
     if (ehc_params->ExceptionHandlerReturn == EXCEPTION_CONTINUE_EXECUTION) {
-        print("  DEBUG: EXCEPTION_CONTINUE_EXECUTION recieved, EIP = 0x%08X (0x%02X)",
-              pContextRecord->Eip,
-              *(uint8_t*)pContextRecord->Eip);
-
-#if 0 // Actually, debug print shows it does skip over correctly.
-        if (*(uint8_t*)pContextRecord->Eip == 0xFF) {
-            pContextRecord->Eip += 2;
-        }
-        else if (*(uint8_t*)pContextRecord->Eip == 0xE8) {
-            pContextRecord->Eip += 5;
-        }
-#endif
-
         // Force set to allow continue execution.
         pExceptionRecord->ExceptionFlags = 0;
     }

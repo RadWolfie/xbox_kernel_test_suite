@@ -63,7 +63,6 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
 static void assert_ExceptionGenCheck(DWORD* except_steps, DWORD step, BOOL* ptests_passed) {
     BOOL test_passed = 1;
     const char* except_steps_str = "except_steps";
-    print("  DEBUG: Test step = %x", step);
     GEN_CHECK(*except_steps, step, except_steps_str);
     *except_steps = step + 1;
     *ptests_passed &= test_passed;
@@ -146,17 +145,9 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                     print("  ERROR: Should skip exception handler (3)");
                 }
             }
-#if 0 // Disable __finally, might be the cause of issue and may not work with continue execute return.
             __finally {
                 assert_ExceptionGenCheck(&except_steps, 14, &test_passed);
             }
-#else
-            __except(EXCEPTION_CONTINUE_SEARCH) {
-                // Should not be reachable
-                test_passed = 0;
-                print("  ERROR: Should skip exception handler (X)");
-            }
-#endif
         }
         // This triggered maybe unwind local variables back to step 12.
         // And update ExceptionCode to EXCEPTION_NONCONTINUABLE_EXCEPTION.
