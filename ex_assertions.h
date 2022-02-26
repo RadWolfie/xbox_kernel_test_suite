@@ -72,6 +72,9 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
     BOOL test_passed = 1;
     DWORD except_steps = 0;
 
+    // Verbose debug if any errors occur.
+    print("  DEBUG: ExceptionCode = %08X", ehc_params->ExceptionCode);
+
     // TODO: Add EXCEPTION_CONTINUE_EXECUTION
     __try {
 
@@ -94,7 +97,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                                                         assert_ExceptionTryExceptFinally,
                                                         GetExceptionCode(),
                                                         GetExceptionInformation())
-                     ) {
+                         ) {
                     // Should not be reachable
                     test_passed = 0;
                     print("  ERROR: Should skip exception handler (2)");
@@ -135,7 +138,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                                                         assert_ExceptionTryExceptFinally,
                                                         GetExceptionCode(),
                                                         GetExceptionInformation())
-                     ) {
+                         ) {
                     // Should not be reachable
                     test_passed = 0;
                     print("  ERROR: Should skip exception handler (3)");
@@ -145,6 +148,10 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                 assert_ExceptionGenCheck(&except_steps, 14, &test_passed);
             }
         }
+        // This triggered maybe unwind local variables back to step 12.
+        // And update ExceptionCode to EXCEPTION_NONCONTINUABLE_EXCEPTION.
+        // which also trigger finally first, then here repeatly.
+        // TODO: Find out how to move forward in catcher function. And maybe preserve the values.
         __except(assert_ExceptionGenCheck(&except_steps, 13, &test_passed),
                  // Update for next exception to execute handler.
                  ehc_params->ExceptionHandlerReturn = EXCEPTION_CONTINUE_EXECUTION,
