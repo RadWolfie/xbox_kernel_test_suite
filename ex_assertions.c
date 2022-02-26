@@ -49,13 +49,13 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
     if (ehc_params->is_RtlRaiseStatus) {
         GEN_CHECK_RANGE((DWORD)pExceptionRecord->ExceptionAddress,
                         (DWORD)RtlRaiseStatus,
-                        0x200/*assumed size since it is kernel function and reside in xbox hardware*/,
+                        0x300/*assumed size since it is kernel function and reside in xbox hardware*/,
                         "ExceptionAddress");
     }
     else {
         GEN_CHECK_RANGE((DWORD)pExceptionRecord->ExceptionAddress,
                         (DWORD)func_exception,
-                        0x200/*assumed size since can't find actual function size in C*/,
+                        0x300/*assumed size since can't find actual function size in C*/,
                         "ExceptionAddress");
     }
     // Right now, we only check two parameters.
@@ -127,6 +127,9 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
             pContextRecord->Eip += 5;
         }
 #endif
+
+        // Force set to allow continue execution.
+        pExceptionRecord->ExceptionFlags = 0;
     }
 
     *ehc_params->ptests_passed &= test_passed;
