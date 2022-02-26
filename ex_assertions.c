@@ -119,12 +119,14 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
               pContextRecord->Eip,
               *(uint8_t*)pContextRecord->Eip);
 
+#if 0 // Actually, debug print shows it does skip over correctly.
         if (*(uint8_t*)pContextRecord->Eip == 0xFF) {
             pContextRecord->Eip += 2;
         }
         else if (*(uint8_t*)pContextRecord->Eip == 0xE8) {
             pContextRecord->Eip += 5;
         }
+#endif
     }
 
     *ehc_params->ptests_passed &= test_passed;

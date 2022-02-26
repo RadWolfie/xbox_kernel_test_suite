@@ -63,6 +63,7 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
 static void assert_ExceptionGenCheck(DWORD* except_steps, DWORD step, BOOL* ptests_passed) {
     BOOL test_passed = 1;
     const char* except_steps_str = "except_steps";
+    print("  DEBUG: Test step = %x", step);
     GEN_CHECK(*except_steps, step, except_steps_str);
     *except_steps = step + 1;
     *ptests_passed &= test_passed;
@@ -78,7 +79,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
     // TODO: Add EXCEPTION_CONTINUE_EXECUTION
     __try {
 
-        // --- Test EXCEPTION_EXECUTE_HANDLER ----
+        // --- Test EXCEPTION_EXECUTE_HANDLER begin ----
         assert_ExceptionGenCheck(&except_steps, 0, &test_passed);
         __try {
             assert_ExceptionGenCheck(&except_steps, 1, &test_passed);
@@ -117,10 +118,11 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                  ) {
             assert_ExceptionGenCheck(&except_steps, 7, &test_passed);
         }
+        // --- Test EXCEPTION_EXECUTE_HANDLER end ----
 
         assert_ExceptionGenCheck(&except_steps, 8, &test_passed);
 
-        // --- Test EXCEPTION_CONTINUE_EXECUTION ----
+        // --- Test EXCEPTION_CONTINUE_EXECUTION begin ----
         __try {
             assert_ExceptionGenCheck(&except_steps, 9, &test_passed);
             __try {
@@ -144,16 +146,24 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                     print("  ERROR: Should skip exception handler (3)");
                 }
             }
+#if 0 // Disable __finally, might be the cause of issue and may not work with continue execute return.
             __finally {
                 assert_ExceptionGenCheck(&except_steps, 14, &test_passed);
             }
+#else
+            __except(EXCEPTION_CONTINUE_SEARCH) {
+                // Should not be reachable
+                test_passed = 0;
+                print("  ERROR: Should skip exception handler (X)");
+            }
+#endif
         }
         // This triggered maybe unwind local variables back to step 12.
         // And update ExceptionCode to EXCEPTION_NONCONTINUABLE_EXCEPTION.
         // which also trigger finally first, then here repeatly.
         // TODO: Find out how to move forward in catcher function. And maybe preserve the values.
         __except(assert_ExceptionGenCheck(&except_steps, 13, &test_passed),
-                 // Update for next exception to execute handler.
+                 // Update for next exception to resume execute.
                  ehc_params->ExceptionHandlerReturn = EXCEPTION_CONTINUE_EXECUTION,
                  assert_ExceptionHandlerCatcher(ehc_params,
                                                 assert_ExceptionTryExceptFinally,
@@ -164,6 +174,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
             test_passed = 0;
             print("  ERROR: Should skip exception handler (4)");
         }
+        // --- Test EXCEPTION_CONTINUE_EXECUTION end ----
 
         // Make sure we are still processing after the handled catchs above.
         assert_ExceptionGenCheck(&except_steps, 16, &test_passed);
