@@ -74,6 +74,8 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
 
     // TODO: Add EXCEPTION_CONTINUE_EXECUTION
     __try {
+
+        // --- Test EXCEPTION_EXECUTE_HANDLER ----
         assert_ExceptionGenCheck(&except_steps, 0, &test_passed);
         __try {
             assert_ExceptionGenCheck(&except_steps, 1, &test_passed);
@@ -112,14 +114,60 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                  ) {
             assert_ExceptionGenCheck(&except_steps, 7, &test_passed);
         }
+
+        assert_ExceptionGenCheck(&except_steps, 8, &test_passed);
+
+        // --- Test EXCEPTION_CONTINUE_EXECUTION ----
+        __try {
+            assert_ExceptionGenCheck(&except_steps, 9, &test_passed);
+            __try {
+                assert_ExceptionGenCheck(&except_steps, 10, &test_passed);
+                __try {
+                    assert_ExceptionGenCheck(&except_steps, 11, &test_passed);
+                    ehc_params->ExceptionHandlerReturn = EXCEPTION_CONTINUE_SEARCH;
+                    ehc_params->callback_func(ehc_params->callback_param);
+
+                    // For continue execution, this should be the last step to process
+                    assert_ExceptionGenCheck(&except_steps, 15, &test_passed);
+                }
+                __except(assert_ExceptionGenCheck(&except_steps, 12, &test_passed),
+                         assert_ExceptionHandlerCatcher(ehc_params,
+                                                        assert_ExceptionTryExceptFinally,
+                                                        GetExceptionCode(),
+                                                        GetExceptionInformation())
+                     ) {
+                    // Should not be reachable
+                    test_passed = 0;
+                    print("  ERROR: Should skip exception handler (3)");
+                }
+            }
+            __finally {
+                assert_ExceptionGenCheck(&except_steps, 14, &test_passed);
+            }
+        }
+        __except(assert_ExceptionGenCheck(&except_steps, 13, &test_passed),
+                 // Update for next exception to execute handler.
+                 ehc_params->ExceptionHandlerReturn = EXCEPTION_CONTINUE_EXECUTION,
+                 assert_ExceptionHandlerCatcher(ehc_params,
+                                                assert_ExceptionTryExceptFinally,
+                                                GetExceptionCode(),
+                                                GetExceptionInformation())
+                 ) {
+             // Should not be reachable
+            test_passed = 0;
+            print("  ERROR: Should skip exception handler (4)");
+        }
+
+        // Make sure we are still processing after the handled catchs above.
+        assert_ExceptionGenCheck(&except_steps, 16, &test_passed);
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
         // Should not be reachable
         test_passed = 0;
-        print("  ERROR: Should skip exception handler (3)");
+        print("  ERROR: Should skip exception handler (5)");
     }
 
-    assert_ExceptionGenCheck(&except_steps, 8, &test_passed);
+    assert_ExceptionGenCheck(&except_steps, 17, &test_passed);
 
     if (!test_passed) {
         print("  ERROR: ExceptionCode = %08X test failed, see above expected error(s)", ehc_params->ExceptionCode);
