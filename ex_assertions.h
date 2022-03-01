@@ -80,6 +80,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
     // TODO: Add EXCEPTION_CONTINUE_EXECUTION
     __try {
 
+#if 0 // Disabled
         // --- Test EXCEPTION_EXECUTE_HANDLER begin ----
         assert_ExceptionGenCheck(&except_steps, 0, &test_passed);
         __try {
@@ -119,6 +120,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                  ) {
             assert_ExceptionGenCheck(&except_steps, 7, &test_passed);
         }
+#endif
         // --- Test EXCEPTION_EXECUTE_HANDLER end ----
 
         assert_ExceptionGenCheck(&except_steps, 8, &test_passed);
