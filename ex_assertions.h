@@ -60,13 +60,12 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
                                    DWORD ExceptionCode,
                                    PEXCEPTION_POINTERS ExceptionInformation);
 
-//#define TEST_EXCEPTION_CONTINUE_EXECUTION // Disabled as NXDK doesn't work as intended
-
+#define DEBUG_EXCEPTION_STEP // Debugging Cxbx-Reloaded through log file for faster analysis.
 static void assert_ExceptionGenCheck(DWORD* except_steps, DWORD step, BOOL* ptests_passed) {
     BOOL test_passed = 1;
     const char* except_steps_str = "except_steps";
     GEN_CHECK(*except_steps, step, except_steps_str);
-#ifdef TEST_EXCEPTION_CONTINUE_EXECUTION
+#ifdef DEBUG_EXCEPTION_STEP
     // Verbose debug if any steps missing.
     // NOTE: No steps were missing after thorough checks.
     print("  DEBUG: step = %u", step);
@@ -75,13 +74,14 @@ static void assert_ExceptionGenCheck(DWORD* except_steps, DWORD step, BOOL* ptes
     *ptests_passed &= test_passed;
 }
 
+//#define TEST_EXCEPTION_CONTINUE_EXECUTION // Disabled as NXDK doesn't work as intended
 static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_params) {
     BOOL test_passed = 1;
     DWORD except_steps = 0;
 
-#ifdef TEST_EXCEPTION_CONTINUE_EXECUTION
+#ifdef DEBUG_EXCEPTION_STEP
     // Verbose debug if any errors occur.
-    print("  DEBUG: ExceptionCode = %08X", ehc_params->ExceptionCode);
+    print("  DEBUG: ExceptionCode = %08X test start", ehc_params->ExceptionCode);
 #endif
 
     __try {
@@ -196,7 +196,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
         print("  ERROR: ExceptionCode = %08X test failed, see above expected error(s)", ehc_params->ExceptionCode);
     }
 
-#ifdef TEST_EXCEPTION_CONTINUE_EXECUTION
+#ifdef DEBUG_EXCEPTION_STEP
     print("  DEBUG: ExceptionCode = %08X test done", ehc_params->ExceptionCode);
 #endif
 
