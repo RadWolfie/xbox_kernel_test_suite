@@ -64,6 +64,8 @@ static void assert_ExceptionGenCheck(DWORD* except_steps, DWORD step, BOOL* ptes
     BOOL test_passed = 1;
     const char* except_steps_str = "except_steps";
     GEN_CHECK(*except_steps, step, except_steps_str);
+    // Verbose debug if any steps missing.
+    print("  DEBUG: step = %u", step);
     *except_steps = step + 1;
     *ptests_passed &= test_passed;
 }
