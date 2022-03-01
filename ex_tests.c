@@ -399,11 +399,9 @@ void test_ExRaiseException(){
 
     // Test list of exception codes
     for (unsigned i = 0; i < (sizeof(assert_exception_code_list) / sizeof(DWORD)); i++) {
-        print("  DEBUG: ExceptionCode[%u] start)", i);
         exception_record.ExceptionCode = assert_exception_code_list[i];
         ehc_params.ExceptionCode = exception_record.ExceptionCode;
         assert_ExceptionTryExceptFinally(&ehc_params);
-        print("  DEBUG: ExceptionCode[%u] done", i);
     }
 
     print_test_footer(func_num, func_name, tests_passed);
