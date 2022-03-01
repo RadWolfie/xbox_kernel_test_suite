@@ -77,10 +77,8 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
     // Verbose debug if any errors occur.
     print("  DEBUG: ExceptionCode = %08X", ehc_params->ExceptionCode);
 
-    // TODO: Add EXCEPTION_CONTINUE_EXECUTION
     __try {
 
-#if 0 // Disabled
         // --- Test EXCEPTION_EXECUTE_HANDLER begin ----
         assert_ExceptionGenCheck(&except_steps, 0, &test_passed);
         __try {
@@ -120,11 +118,11 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
                  ) {
             assert_ExceptionGenCheck(&except_steps, 7, &test_passed);
         }
-#endif
         // --- Test EXCEPTION_EXECUTE_HANDLER end ----
 
         assert_ExceptionGenCheck(&except_steps, 8, &test_passed);
 
+#if 0 // Disabled
         // --- Test EXCEPTION_CONTINUE_EXECUTION begin ----
         __try {
             assert_ExceptionGenCheck(&except_steps, 9, &test_passed);
@@ -170,6 +168,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
             print("  ERROR: Should skip exception handler (4)");
         }
         // --- Test EXCEPTION_CONTINUE_EXECUTION end ----
+#endif
 
         // Make sure we are still processing after the handled catchs above.
         assert_ExceptionGenCheck(&except_steps, 16, &test_passed);
