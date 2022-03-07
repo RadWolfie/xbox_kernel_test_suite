@@ -45,7 +45,12 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
     PEXCEPTION_RECORD pExceptionRecord = ExceptionInformation->ExceptionRecord;
     GEN_CHECK(ExceptionCode, ehc_params->ExceptionCode, "ExceptionCode");
     GEN_CHECK(pExceptionRecord->ExceptionCode, ehc_params->ExceptionCode, "pExceptionRecord->ExceptionCode");
-    GEN_CHECK(pExceptionRecord->ExceptionFlags, EXCEPTION_NONCONTINUABLE/*TODO: Check if it's editable*/, "pExceptionRecord->ExceptionFlags");
+    if (ehc_params->ExceptionHandlerReturn == EXCEPTION_CONTINUE_EXECUTION) {
+        GEN_CHECK(pExceptionRecord->ExceptionFlags, 0, "pExceptionRecord->ExceptionFlags");
+    } else {
+        // NOTE: While there are EXCEPTION_UNWINDING and EXCEPTION_EXIT_UNWIND flags, it is best to let them handled internally.
+        GEN_CHECK(pExceptionRecord->ExceptionFlags, EXCEPTION_NONCONTINUABLE, "pExceptionRecord->ExceptionFlags");
+    }
     if (ehc_params->is_RtlRaiseStatus) {
         GEN_CHECK_RANGE((DWORD)pExceptionRecord->ExceptionAddress,
                         (DWORD)RtlRaiseStatus,
