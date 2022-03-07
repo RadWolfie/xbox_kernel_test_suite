@@ -54,7 +54,7 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
         }
         if (!ehc_params->is_RtlRaise) {
             // Assumed it get called again.
-            pContextRecord->Esp -= 2;
+            pContextRecord->Esp += 2;
         }
     }
 
