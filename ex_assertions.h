@@ -74,7 +74,6 @@ static void assert_ExceptionGenCheck(DWORD* except_steps, DWORD step, BOOL* ptes
     *ptests_passed &= test_passed;
 }
 
-//#define TEST_EXCEPTION_CONTINUE_EXECUTION // Disabled as NXDK doesn't work as intended
 static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_params) {
     BOOL test_passed = 1;
     DWORD except_steps = 0;
@@ -129,7 +128,6 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
 
         assert_ExceptionGenCheck(&except_steps, 8, &test_passed);
 
-#ifdef TEST_EXCEPTION_CONTINUE_EXECUTION
         // --- Test EXCEPTION_CONTINUE_EXECUTION begin ----
         __try {
             assert_ExceptionGenCheck(&except_steps, 9, &test_passed);
@@ -178,7 +176,6 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
 
         // Make sure we are still processing after the handled catchs above.
         assert_ExceptionGenCheck(&except_steps, 16, &test_passed);
-#endif
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
         // Should not be reachable
@@ -186,11 +183,7 @@ static void assert_ExceptionTryExceptFinally(ExceptionHandlerCatcherParams* ehc_
         print("  ERROR: Should skip exception handler (5)");
     }
 
-#ifdef TEST_EXCEPTION_CONTINUE_EXECUTION
     assert_ExceptionGenCheck(&except_steps, 17, &test_passed);
-#else
-    assert_ExceptionGenCheck(&except_steps, 9, &test_passed);
-#endif
 
     if (!test_passed) {
         print("  ERROR: ExceptionCode = %08X test failed, see above expected error(s)", ehc_params->ExceptionCode);
