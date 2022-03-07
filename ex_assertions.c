@@ -48,7 +48,7 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
     if (ehc_params->ExceptionHandlerReturn == EXCEPTION_CONTINUE_EXECUTION) {
         // Force set to allow continue execution.
         pExceptionRecord->ExceptionFlags = 0;
-        if (ehc_params->is_RtlRaise && ExceptionCode == EXCEPTION_BREAKPOINT) {
+        if (/*ehc_params->is_RtlRaise &&*/ ExceptionCode == EXCEPTION_BREAKPOINT) {
             // Restore Eip as we pretended there's a breakpoint.
             pContextRecord->Eip = (DWORD)pExceptionRecord->ExceptionAddress;
         }
