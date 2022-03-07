@@ -52,6 +52,9 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
             // Restore Eip as we pretended there's a breakpoint.
             pContextRecord->Eip = (DWORD)pExceptionRecord->ExceptionAddress;
         }
+        if (!ehc_params->is_RtlRaise) {
+            pContextRecord->Esp -= 4;
+        }
     }
 
     // Exception record test
