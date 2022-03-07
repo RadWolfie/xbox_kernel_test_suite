@@ -114,7 +114,7 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
         // SegCs = 0x00030008; EFlags = 0x00000286; SegSs = 0x00030010;
     }
 
-#if 0 // Debug purpose
+#if 1 // Debug purpose
     print("  context record debug: "/*FloatSave = */
           "Edi = 0x%08X; Esi = 0x%08X; Ebx = 0x%08X; Edx = 0x%08X; Ecx = 0x%08X; Eax = 0x%08X;"
           "Ebp = 0x%08X; Eip = 0x%08X; SegCs = 0x%08X; EFlags = 0x%08X; Esp = 0x%08X; SegSs = 0x%08X;",
