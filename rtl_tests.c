@@ -1204,7 +1204,7 @@ void test_RtlRaiseException(){
     EXCEPTION_RECORD exception_record;
     memset(&exception_record, 0, sizeof(EXCEPTION_RECORD));
 
-    exception_record.ExceptionFlags = EXCEPTION_NONCONTINUABLE; // TODO: Extend test for this?
+    //exception_record.ExceptionFlags = EXCEPTION_NONCONTINUABLE; // TODO: Extend test for this?
     //exception_record.ExceptionRecord = NULL;
     //exception_record.ExceptionAddress; // is overrided internally
     exception_record.NumberParameters = 5; // used for ExceptionInformation (one line below)
@@ -1229,6 +1229,7 @@ void test_RtlRaiseException(){
     for (unsigned i = 0; i < (sizeof(assert_exception_code_list) / sizeof(DWORD)); i++) {
         exception_record.ExceptionCode = assert_exception_code_list[i];
         ehc_params.ExceptionCode = exception_record.ExceptionCode;
+        exception_record.ExceptionFlags = EXCEPTION_NONCONTINUABLE; // Force re-set value.
         assert_ExceptionTryExceptFinally(&ehc_params);
     }
 
