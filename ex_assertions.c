@@ -53,7 +53,8 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
             pContextRecord->Eip = (DWORD)pExceptionRecord->ExceptionAddress;
         }
         if (!ehc_params->is_RtlRaise) {
-            pContextRecord->Esp -= 4;
+            // Assumed it get called again.
+            pContextRecord->Esp -= 2;
         }
     }
 
