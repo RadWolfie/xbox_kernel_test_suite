@@ -1,0 +1,6 @@
+[
+    {
+        "name": "nxdk",
+        "toolchainFile": "${NXDK_DIR}/share/toolchain-nxdk.cmake"
+    }
+]
