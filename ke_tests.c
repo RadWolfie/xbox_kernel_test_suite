@@ -1,5 +1,7 @@
 #include <xboxkrnl/xboxkrnl.h>
+#include <windows.h>
 
+#include "assertion_defines.h"
 #include "ke_assertions.h"
 #include "output.h"
 
@@ -85,8 +87,133 @@ void test_KeInitializeEvent(){
     /* FIXME: This is a stub! implement this function! */
 }
 
+// Testing Ke's Interrupt process...
+static KINTERRUPT InterruptObject;
+static KDPC GPU_Dpc;
+static BOOL DpcFunc_called;
+static void NTAPI GPU_DpcFunc(
+	IN KDPC* Dpc,
+	IN PVOID DeferredContext,
+	IN PVOID SystemArgument1,
+	IN PVOID SystemArgument2
+)
+{
+    if (!DpcFunc_called) {
+        DpcFunc_called = 1;
+    }
+#if 1
+    static BOOL show_message = 1;
+    if (show_message) {
+        print("  Hello from GPU_DpcFunc call!");
+        show_message = 0;
+    }
+#endif
+
+#if 0
+    //static unsigned counter = 1;
+    //print("  GPU_DpcFunc: counter=%u", counter);
+    //counter++;
+#endif
+}
+
+static BOOL IsrFunc_called;
+static BOOLEAN NTAPI GPU_InterruptServiceRountine(
+	IN KINTERRUPT* Interrupt,
+	IN PVOID ServiceContext
+)
+{
+    if (!IsrFunc_called) {
+        IsrFunc_called = 1;
+    }
+#if 1
+    static BOOL show_message = 1;
+    if (show_message) {
+        print("  Hello from GPU_InterruptServiceRountine call!");
+        KeInsertQueueDpc(&GPU_Dpc, NULL, NULL);
+        show_message = 0;
+        return TRUE;
+    }
+#endif
+
+#if 0
+    static unsigned counter = 1;
+    print("  GPU_InterruptServiceRountine: counter=%u", counter);
+    counter++;
+#endif
+
+    return FALSE;
+}
+
 void test_KeInitializeInterrupt(){
-    /* FIXME: This is a stub! implement this function! */
+    const char* func_num = "0x006D";
+    const char* func_name = "KeInitializeInterrupt";
+    BOOL test_passed = 1;
+    print_test_header(func_num, func_name);
+
+    KIRQL irql;
+    ULONG irq_test = 3;
+    print("DEBUG: irq_test=%u", irq_test);
+    ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
+
+    // We may not need Dpc rountine since minimal requirement is Isr
+    KeInitializeDpc(&GPU_Dpc, GPU_DpcFunc, NULL);
+    //RtlZeroMemory(&InterruptObject, sizeof(KINTERRUPT));
+
+    KeInitializeInterrupt(&InterruptObject, GPU_InterruptServiceRountine, NULL, InterruptVector, irql, LevelSensitive, TRUE);
+    
+    // Inspect each member variables are correctly setup.
+    GEN_CHECK(InterruptObject.ServiceRoutine, GPU_InterruptServiceRountine, "InterruptObject.ServiceRoutine");
+    GEN_CHECK(InterruptObject.ServiceContext, NULL, "InterruptObject.ServiceContext");
+    //print("DEBUG: InterruptObject.BusInterruptLevel=%u", InterruptObject.BusInterruptLevel);
+    GEN_CHECK(InterruptObject.BusInterruptLevel, (InterruptVector-0x30), "InterruptObject.BusInterruptLevel");
+    GEN_CHECK(InterruptObject.Irql, irql, "InterruptObject.Irql");
+    GEN_CHECK(InterruptObject.Connected, FALSE, "InterruptObject.Connected");
+    GEN_CHECK(InterruptObject.ShareVector, TRUE, "InterruptObject.ShareVector"); // Not set??
+    //print("DEBUG: InterruptObject.Mode=%llu", InterruptObject.Mode);
+    GEN_CHECK(InterruptObject.Mode, LevelSensitive, "InterruptObject.Mode");
+    print("DEBUG: InterruptObject.ServiceCount=%u", InterruptObject.ServiceCount);
+    //GEN_CHECK(InterruptObject.ServiceCount, , "InterruptObject.ServiceCount"); // Not set
+
+    // TODO: Fix the comment for "conected" to "connected" typo.
+    if (!KeConnectInterrupt(&InterruptObject)) {
+        print("ERROR: Unable to connect interrupt");
+        test_passed = 0;
+    }
+    else {
+        print("SUCCESS: Able to connect interrupt");
+    }
+
+    Sleep(500);
+
+    if (IsrFunc_called) {
+        print("DEBUG: IsrFunc been called");
+    }
+    else {
+        print("DEBUG: IsrFunc didn't get called");
+    }
+
+    if (DpcFunc_called) {
+        print("DEBUG: DpcFunc been called");
+    }
+    else {
+        print("DEBUG: DpcFunc didn't get called");
+    }
+
+    // TODO: Add comment for what return should be expected.
+    if (InterruptObject.Connected) {
+        BOOLEAN wasConnected = KeDisconnectInterrupt(&InterruptObject);
+        GEN_CHECK(wasConnected, TRUE, "wasConnected1");
+    }
+    else {
+        test_passed = 0;
+    }
+
+    BOOLEAN wasConnected = KeDisconnectInterrupt(&InterruptObject);
+    GEN_CHECK(wasConnected, FALSE, "wasConnected2");
+
+    BOOLEAN testBool2 = KeRemoveQueueDpc(&GPU_Dpc);
+
+    print_test_footer(func_num, func_name, test_passed);
 }
 
 void test_KeInitializeMutant(){
