@@ -91,7 +91,7 @@ void test_KeInitializeEvent(){
 static KINTERRUPT InterruptObject;
 static KDPC GPU_Dpc;
 static BOOL DpcFunc_called;
-static void NTAPI GPU_DpcFunc(
+static void __stdcall GPU_DpcFunc(
 	IN KDPC* Dpc,
 	IN PVOID DeferredContext,
 	IN PVOID SystemArgument1,
@@ -101,7 +101,7 @@ static void NTAPI GPU_DpcFunc(
     if (!DpcFunc_called) {
         DpcFunc_called = 1;
     }
-#if 1
+#if 0
     static BOOL show_message = 1;
     if (show_message) {
         print("  Hello from GPU_DpcFunc call!");
@@ -117,7 +117,7 @@ static void NTAPI GPU_DpcFunc(
 }
 
 static BOOL IsrFunc_called;
-static BOOLEAN NTAPI GPU_InterruptServiceRountine(
+static BOOLEAN __stdcall GPU_InterruptServiceRountine(
 	IN KINTERRUPT* Interrupt,
 	IN PVOID ServiceContext
 )
@@ -129,9 +129,10 @@ static BOOLEAN NTAPI GPU_InterruptServiceRountine(
     static BOOL show_message = 1;
     if (show_message) {
         print("  Hello from GPU_InterruptServiceRountine call!");
+        ULONG ret = KeDisconnectInterrupt(Interrupt);
+        print("  GPU_InterruptServiceRountine: KeDisconnectInterrupt return %x", ret);
         KeInsertQueueDpc(&GPU_Dpc, NULL, NULL);
         show_message = 0;
-        return TRUE;
     }
 #endif
 
@@ -141,7 +142,7 @@ static BOOLEAN NTAPI GPU_InterruptServiceRountine(
     counter++;
 #endif
 
-    return FALSE;
+    return TRUE;
 }
 
 void test_KeInitializeInterrupt(){
@@ -151,7 +152,7 @@ void test_KeInitializeInterrupt(){
     print_test_header(func_num, func_name);
 
     KIRQL irql;
-    ULONG irq_test = 3;
+    ULONG irq_test = 7;
     print("DEBUG: irq_test=%u", irq_test);
     ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
 
@@ -182,6 +183,13 @@ void test_KeInitializeInterrupt(){
     else {
         print("SUCCESS: Able to connect interrupt");
     }
+
+#if 1
+    KIRQL old_irql = KfRaiseIrql(irql);
+    print("DEBUG: called KfRaiseIrql");
+    KfLowerIrql(old_irql);
+    print("DEBUG: called KfLowerIrql");
+#endif
 
     Sleep(500);
 
