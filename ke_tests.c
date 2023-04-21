@@ -152,6 +152,22 @@ void test_KeInitializeInterrupt(){
     print_test_header(func_num, func_name);
 
     KIRQL irql;
+    // 1 =USB0 | seems connected but locked up
+    // 2       | is connected but no response
+    // 3 =GPU  | fail to connect interrupt.
+    // 4 =NIC  | success connected but doesn't trigger ISR function
+    // 5 =APU  | success connected but doesn't trigger ISR function
+    // 6 =ACI  | success connected but doesn't trigger ISR function
+    // 7       | success connected but stuck in ISR loophell; yet if with Dpc callback, locked up; doesn't let it continue for some reason..
+    // 8       | fail to connect interrupt.
+    // 9 =USB1 | success connected but doesn't trigger ISR function
+    // 10      | success connected but stuck in ISR loophell
+    // 11      | fail to connect interrupt.
+    // 12      | fail to connect interrupt.
+    // 13      | success connect but ISR didn't get called.
+    // 14=IDE  | is unable to connect interrupt.
+    // 15      | success connect and ISR called.
+    // 16 - 26 | fail to connect interrupt.
     ULONG irq_test = 5;
     print("DEBUG: irq_test=%u", irq_test);
     ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
