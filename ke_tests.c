@@ -131,7 +131,7 @@ static BOOLEAN __stdcall GPU_InterruptServiceRountine(
         print("  Hello from GPU_InterruptServiceRountine call!");
         ULONG ret = KeDisconnectInterrupt(Interrupt);
         print("  GPU_InterruptServiceRountine: KeDisconnectInterrupt return %x", ret);
-        KeInsertQueueDpc(&GPU_Dpc, NULL, NULL);
+        //KeInsertQueueDpc(&GPU_Dpc, NULL, NULL);
         show_message = 0;
     }
 #endif
@@ -152,7 +152,7 @@ void test_KeInitializeInterrupt(){
     print_test_header(func_num, func_name);
 
     KIRQL irql;
-    ULONG irq_test = 7;
+    ULONG irq_test = 5;
     print("DEBUG: irq_test=%u", irq_test);
     ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
 
@@ -184,7 +184,9 @@ void test_KeInitializeInterrupt(){
         print("SUCCESS: Able to connect interrupt");
     }
 
-#if 1
+    // might not be the right way... idk
+    HalRequestSoftwareInterrupt(irql);
+#if 0
     KIRQL old_irql = KfRaiseIrql(irql);
     print("DEBUG: called KfRaiseIrql");
     KfLowerIrql(old_irql);
