@@ -79,19 +79,9 @@ void test_KeInitializeDeviceQueue(){
     /* FIXME: This is a stub! implement this function! */
 }
 
-void test_KeInitializeDpc(){
-    /* FIXME: This is a stub! implement this function! */
-}
-
-void test_KeInitializeEvent(){
-    /* FIXME: This is a stub! implement this function! */
-}
-
-// Testing Ke's Interrupt process...
-static KINTERRUPT InterruptObject;
-static KDPC GPU_Dpc;
+static KDPC Ke_Dpc;
 static BOOL DpcFunc_called;
-static void __stdcall GPU_DpcFunc(
+static void __stdcall Ke_DpcFunc(
 	IN KDPC* Dpc,
 	IN PVOID DeferredContext,
 	IN PVOID SystemArgument1,
@@ -101,122 +91,32 @@ static void __stdcall GPU_DpcFunc(
     if (!DpcFunc_called) {
         DpcFunc_called = 1;
     }
-#if 0
+#if 1
     static BOOL show_message = 1;
     if (show_message) {
-        print("  Hello from GPU_DpcFunc call!");
+        //print("  Hello from Ke_DpcFunc call!");
+        //print("  Ke_DpcFunc: KeDisconnectInterrupt return %x", ret);
         show_message = 0;
     }
 #endif
 
 #if 0
     //static unsigned counter = 1;
-    //print("  GPU_DpcFunc: counter=%u", counter);
+    //print("  Ke_DpcFunc: counter=%u", counter);
     //counter++;
 #endif
 }
 
-static BOOL IsrFunc_called;
-static BOOLEAN __stdcall GPU_InterruptServiceRountine(
-	IN KINTERRUPT* Interrupt,
-	IN PVOID ServiceContext
-)
-{
-    if (!IsrFunc_called) {
-        IsrFunc_called = 1;
-    }
-#if 1
-    static BOOL show_message = 1;
-    if (show_message) {
-        print("  Hello from GPU_InterruptServiceRountine call!");
-        ULONG ret = KeDisconnectInterrupt(Interrupt);
-        print("  GPU_InterruptServiceRountine: KeDisconnectInterrupt return %x", ret);
-        //KeInsertQueueDpc(&GPU_Dpc, NULL, NULL);
-        show_message = 0;
-    }
-#endif
-
-#if 0
-    static unsigned counter = 1;
-    print("  GPU_InterruptServiceRountine: counter=%u", counter);
-    counter++;
-#endif
-
-    return TRUE;
-}
-
-void test_KeInitializeInterrupt(){
-    const char* func_num = "0x006D";
-    const char* func_name = "KeInitializeInterrupt";
-    BOOL test_passed = 1;
-    print_test_header(func_num, func_name);
-
-    KIRQL irql;
-    // 1 =USB0 | seems connected but locked up
-    // 2       | is connected but no response
-    // 3 =GPU  | fail to connect interrupt.
-    // 4 =NIC  | success connected but doesn't trigger ISR function
-    // 5 =APU  | success connected but doesn't trigger ISR function
-    // 6 =ACI  | success connected but doesn't trigger ISR function
-    // 7       | success connected but stuck in ISR loophell; yet if with Dpc callback, locked up; doesn't let it continue for some reason..
-    // 8       | fail to connect interrupt.
-    // 9 =USB1 | success connected but doesn't trigger ISR function
-    // 10      | success connected but stuck in ISR loophell
-    // 11      | fail to connect interrupt.
-    // 12      | fail to connect interrupt.
-    // 13      | success connect but ISR didn't get called.
-    // 14=IDE  | is unable to connect interrupt.
-    // 15      | success connect and ISR called.
-    // 16 - 26 | fail to connect interrupt.
-    ULONG irq_test = 5;
-    print("DEBUG: irq_test=%u", irq_test);
-    ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
-
+void test_KeInitializeDpc(){
+    /* FIXME: This is a stub! implement this function! */
+#if 0 // Moving stuff here
     // We may not need Dpc rountine since minimal requirement is Isr
-    KeInitializeDpc(&GPU_Dpc, GPU_DpcFunc, NULL);
-    //RtlZeroMemory(&InterruptObject, sizeof(KINTERRUPT));
+    KeInitializeDpc(&Ke_Dpc, Ke_DpcFunc, NULL);
 
-    KeInitializeInterrupt(&InterruptObject, GPU_InterruptServiceRountine, NULL, InterruptVector, irql, LevelSensitive, TRUE);
-    
-    // Inspect each member variables are correctly setup.
-    GEN_CHECK(InterruptObject.ServiceRoutine, GPU_InterruptServiceRountine, "InterruptObject.ServiceRoutine");
-    GEN_CHECK(InterruptObject.ServiceContext, NULL, "InterruptObject.ServiceContext");
-    //print("DEBUG: InterruptObject.BusInterruptLevel=%u", InterruptObject.BusInterruptLevel);
-    GEN_CHECK(InterruptObject.BusInterruptLevel, (InterruptVector-0x30), "InterruptObject.BusInterruptLevel");
-    GEN_CHECK(InterruptObject.Irql, irql, "InterruptObject.Irql");
-    GEN_CHECK(InterruptObject.Connected, FALSE, "InterruptObject.Connected");
-    GEN_CHECK(InterruptObject.ShareVector, TRUE, "InterruptObject.ShareVector"); // Not set??
-    //print("DEBUG: InterruptObject.Mode=%llu", InterruptObject.Mode);
-    GEN_CHECK(InterruptObject.Mode, LevelSensitive, "InterruptObject.Mode");
-    print("DEBUG: InterruptObject.ServiceCount=%u", InterruptObject.ServiceCount);
-    //GEN_CHECK(InterruptObject.ServiceCount, , "InterruptObject.ServiceCount"); // Not set
+    //KeInsertQueueDpc(&Ke_Dpc, Interrupt, NULL);
 
-    // TODO: Fix the comment for "conected" to "connected" typo.
-    if (!KeConnectInterrupt(&InterruptObject)) {
-        print("ERROR: Unable to connect interrupt");
-        test_passed = 0;
-    }
-    else {
-        print("SUCCESS: Able to connect interrupt");
-    }
-
-    // might not be the right way... idk
-    HalRequestSoftwareInterrupt(irql);
-#if 0
-    KIRQL old_irql = KfRaiseIrql(irql);
-    print("DEBUG: called KfRaiseIrql");
-    KfLowerIrql(old_irql);
-    print("DEBUG: called KfLowerIrql");
-#endif
-
-    Sleep(500);
-
-    if (IsrFunc_called) {
-        print("DEBUG: IsrFunc been called");
-    }
-    else {
-        print("DEBUG: IsrFunc didn't get called");
-    }
+    //call dispatcher function to start process I hope
+    HalRequestSoftwareInterrupt(2); //=DISPATCH_LEVEL
 
     if (DpcFunc_called) {
         print("DEBUG: DpcFunc been called");
@@ -225,19 +125,163 @@ void test_KeInitializeInterrupt(){
         print("DEBUG: DpcFunc didn't get called");
     }
 
+    BOOLEAN testBool2 = KeRemoveQueueDpc(&Ke_Dpc);
+#endif
+}
+
+void test_KeInitializeEvent(){
+    /* FIXME: This is a stub! implement this function! */
+}
+
+// Testing Ke's Interrupt process...
+static KINTERRUPT InterruptObject;
+// 1 =USB0 | seems connected but locked up
+// 2       | (used for cascade) is connected but no response
+// 3 =GPU  | fail to connect interrupt.
+// 4 =NIC  | success connected but doesn't trigger ISR function
+// 5 =APU  | success connected but doesn't trigger ISR function
+// 6 =ACI  | success connected but doesn't trigger ISR function
+// 7       | (spurious) success connected but stuck in ISR loophell; yet if with Dpc callback, locked up; doesn't let it continue for some reason..
+// 8       | fail to connect interrupt.
+// 9 =USB1 | success connected but doesn't trigger ISR function
+// 10      | success connected but stuck in ISR loophell
+// 11      | fail to connect interrupt.
+// 12      | fail to connect interrupt.
+// 13      | success connect but ISR didn't get called.
+// 14=IDE  | is unable to connect interrupt.
+// 15      | (spurious) success connect and ISR called.
+// 16 - 26 | (doesn't exists) fail to connect interrupt.
+static ULONG irq_test = 7;
+
+#if 0 // Try attempt trigger network device's interrupt
+#define NvRegIrqStatus 0x000
+#define NvRegIrqMask 0x004
+#define NvRegMIIStatus 0x180
+#define BASE ((void *)0xFEF00000)
+#define reg32(offset) (*((volatile uint32_t *)((uintptr_t)BASE + (offset))))
+#endif
+
+static BOOL IsrFunc_called1;
+static BOOL IsrFunc_called2;
+static BOOLEAN __stdcall Ke_InterruptServiceRountine(
+	IN KINTERRUPT* Interrupt,
+	IN PVOID ServiceContext
+)
+{
+    if (!IsrFunc_called1) {
+        IsrFunc_called1 = 1;
+    }
+#if 1
+    static BOOL show_message = 1;
+    if (show_message) {
+        print("  Hello from Ke_InterruptServiceRountine call!"); // TODO: remove this line...
+        HalDisableSystemInterrupt(Interrupt->BusInterruptLevel); // this is what works for get out of loophell but is only a temporary workaround
+        show_message = 0;
+
+        return TRUE;
+    }
+#endif
+
+    if (!IsrFunc_called2) {
+        IsrFunc_called2 = 1;
+    }
+    print("  Hello from Ke_InterruptServiceRountine call again!"); // TODO: remove this line...
+    HalDisableSystemInterrupt(Interrupt->BusInterruptLevel); // this is what works for get out of loophell but is only a temporary workaround
+
+    return TRUE;
+}
+
+// TODO: Try figure out how to trigger interrupt from irq_test that are from either...:
+// 1) loophell IRQs (require restore how it was before) or
+// 2) we manually trigger the interrupt in somehow?
+void test_KeInitializeInterrupt(){
+    const char* func_num = "0x006D";
+    const char* func_name = "KeInitializeInterrupt";
+    BOOL test_passed = 1;
+    print_test_header(func_num, func_name);
+
+    KIRQL irql;
+    print("DEBUG: irq_test=%u", irq_test);
+    ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
+
+    //RtlZeroMemory(&InterruptObject, sizeof(KINTERRUPT));
+
+    // Force set these members to verify if KeInitializeInterrupt call does set them or not.
+    // According to hardware, they are not set. Let's force check them anyway.
+    InterruptObject.ShareVector = 0x15;
+    InterruptObject.ServiceCount = 0x25;
+
+    KeInitializeInterrupt(&InterruptObject, Ke_InterruptServiceRountine, &irq_test, InterruptVector, irql, LevelSensitive, TRUE);
+    
+    // Inspect each member variables are correctly setup.
+    GEN_CHECK(InterruptObject.ServiceRoutine, Ke_InterruptServiceRountine, "InterruptObject.ServiceRoutine");
+    GEN_CHECK(InterruptObject.ServiceContext, &irq_test, "InterruptObject.ServiceContext");
+    //print("DEBUG: InterruptObject.BusInterruptLevel=%u", InterruptObject.BusInterruptLevel);
+    GEN_CHECK(InterruptObject.BusInterruptLevel, (InterruptVector-0x30), "InterruptObject.BusInterruptLevel");
+    GEN_CHECK(InterruptObject.Irql, irql, "InterruptObject.Irql");
+    GEN_CHECK(InterruptObject.Connected, FALSE, "InterruptObject.Connected");
+    GEN_CHECK(InterruptObject.ShareVector, 0x15, "InterruptObject.ShareVector"); // Not set
+    //print("DEBUG: InterruptObject.Mode=%llu", InterruptObject.Mode);
+    GEN_CHECK(InterruptObject.Mode, LevelSensitive, "InterruptObject.Mode");
+    GEN_CHECK(InterruptObject.ServiceCount, 0x25, "InterruptObject.ServiceCount"); // Not set
+    //TODO: How should we decode DispatchCode member variable?
+    // InterruptObject.DispatchCode 
+
+    // TODO: Fix the comment for "conected" to "connected" typo.
+    if (!KeConnectInterrupt(&InterruptObject)) {
+        print("ERROR: Unable to connect interrupt");
+        test_passed = 0;
+    }
+    else {
+        print("SUCCESS: Able to connect interrupt");
+#if 0 // Try attempt trigger network device's interrupt
+        reg32(NvRegIrqMask) = 0xFF;
+        uint32_t nv_irq = reg32(NvRegIrqStatus);
+        print("DEBUG: NvRegIrqStatus=%x", nv_irq);
+        uint32_t nv_mii = reg32(NvRegMIIStatus);
+        print("DEBUG: NvRegMIIStatus=%x", nv_mii);
+        reg32(NvRegIrqStatus) = 0x0040; //=NVREG_IRQ_LINK
+#endif
+    }
+
+    // might not be the right way... idk
+    //HalRequestSoftwareInterrupt(irql);
+#if 0
+    KIRQL old_irql = KfRaiseIrql(irql);
+    print("DEBUG: called KfRaiseIrql");
+    KfLowerIrql(old_irql);
+    print("DEBUG: called KfLowerIrql");
+#endif
+
+    HalEnableSystemInterrupt(InterruptObject.BusInterruptLevel, InterruptObject.Mode);
+
+    Sleep(500);
+
+    if (IsrFunc_called1) {
+        print("DEBUG: IsrFunc x1 been called");
+    }
+    else {
+        print("DEBUG: IsrFunc x1 didn't get called");
+        test_passed = 0;
+    }
+
+    if (IsrFunc_called2) {
+        print("DEBUG: IsrFunc x2 been called");
+    }
+    else {
+        print("DEBUG: IsrFunc x2 didn't get called");
+        test_passed = 0;
+    }
+
+    GEN_CHECK(InterruptObject.Connected, TRUE, "InterruptObject.Connected");
     // TODO: Add comment for what return should be expected.
     if (InterruptObject.Connected) {
         BOOLEAN wasConnected = KeDisconnectInterrupt(&InterruptObject);
         GEN_CHECK(wasConnected, TRUE, "wasConnected1");
     }
-    else {
-        test_passed = 0;
-    }
 
     BOOLEAN wasConnected = KeDisconnectInterrupt(&InterruptObject);
     GEN_CHECK(wasConnected, FALSE, "wasConnected2");
-
-    BOOLEAN testBool2 = KeRemoveQueueDpc(&GPU_Dpc);
 
     print_test_footer(func_num, func_name, test_passed);
 }
