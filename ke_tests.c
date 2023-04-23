@@ -108,12 +108,40 @@ static void __stdcall Ke_DpcFunc(
 }
 
 void test_KeInitializeDpc(){
-    /* FIXME: This is a stub! implement this function! */
-#if 0 // Moving stuff here
-    // We may not need Dpc rountine since minimal requirement is Isr
-    KeInitializeDpc(&Ke_Dpc, Ke_DpcFunc, NULL);
+    const char* func_num = "0x006B";
+    const char* func_name = "KeInitializeDpc";
+    BOOL test_passed = 1;
+    print_test_header(func_num, func_name);
+#if 1 // Moving stuff here
 
-    //KeInsertQueueDpc(&Ke_Dpc, Interrupt, NULL);
+    // Force set these members to verify if KeInitializeDpc call does set them or not.
+    // According to hardware, they are not set. Let's force check them anyway.
+    Ke_Dpc.SystemArgument1 = (PVOID)0x15;
+    Ke_Dpc.SystemArgument2 = (PVOID)0x25;
+
+    KeInitializeDpc(&Ke_Dpc, Ke_DpcFunc, &DpcFunc_called);
+
+    // Inspect each member variables are correctly setup.
+    GEN_CHECK(Ke_Dpc.Type, 0x13/*DpcObject*/, "Ke_Dpc.Type");
+    GEN_CHECK(Ke_Dpc.Inserted, FALSE, "Ke_Dpc.Inserted");
+    //GEN_CHECK(Ke_Dpc.DpcListEntry, , "Ke_Dpc.DpcListEntry");
+    print("DEBUG: Ke_Dpc.DpcListEntry=%p, Blink=%p, Flink=%p", &Ke_Dpc.DpcListEntry, Ke_Dpc.DpcListEntry.Blink, Ke_Dpc.DpcListEntry.Flink);
+    GEN_CHECK(Ke_Dpc.DeferredRoutine, Ke_DpcFunc, "Ke_Dpc.DeferredRoutine");
+    GEN_CHECK(Ke_Dpc.DeferredContext, &DpcFunc_called, "Ke_Dpc.DeferredContext");
+    GEN_CHECK(Ke_Dpc.SystemArgument1, (PVOID)0x15, "Ke_Dpc.SystemArgument1");
+    GEN_CHECK(Ke_Dpc.SystemArgument2, (PVOID)0x25, "Ke_Dpc.SystemArgument2");
+
+    KeInsertQueueDpc(&Ke_Dpc, NULL, NULL);
+
+    // TODO: Move below into different test.
+    GEN_CHECK(Ke_Dpc.Inserted, TRUE, "Ke_Dpc.Inserted"); // TODO: Why is this says false after insert call above?
+    print("DEBUG: Ke_Dpc.DpcListEntry=%p, Blink=%p, Flink=%p", &Ke_Dpc.DpcListEntry, Ke_Dpc.DpcListEntry.Blink, Ke_Dpc.DpcListEntry.Flink);
+    GEN_CHECK(Ke_Dpc.SystemArgument1, NULL, "Ke_Dpc.SystemArgument1");
+    GEN_CHECK(Ke_Dpc.SystemArgument2, NULL, "Ke_Dpc.SystemArgument2");
+
+    // TODO: Move couple lines below into KeRemoveQueueDpc test and find out why it return false here...
+    BOOLEAN removal = KeRemoveQueueDpc(&Ke_Dpc);
+    GEN_CHECK(removal, TRUE, "KeRemoveQueueDpc return");
 
     //call dispatcher function to start process I hope
     HalRequestSoftwareInterrupt(2); //=DISPATCH_LEVEL
@@ -123,10 +151,15 @@ void test_KeInitializeDpc(){
     }
     else {
         print("DEBUG: DpcFunc didn't get called");
+        test_passed = 0;
     }
 
-    BOOLEAN testBool2 = KeRemoveQueueDpc(&Ke_Dpc);
+    // TODO: Move couple lines below into KeRemoveQueueDpc test
+    removal = KeRemoveQueueDpc(&Ke_Dpc);
+    GEN_CHECK(removal, FALSE, "KeRemoveQueueDpc return");
 #endif
+
+    print_test_footer(func_num, func_name, test_passed);
 }
 
 void test_KeInitializeEvent(){
@@ -212,7 +245,7 @@ void test_KeInitializeInterrupt(){
     InterruptObject.ServiceCount = 0x25;
 
     KeInitializeInterrupt(&InterruptObject, Ke_InterruptServiceRountine, &irq_test, InterruptVector, irql, LevelSensitive, TRUE);
-    
+
     // Inspect each member variables are correctly setup.
     GEN_CHECK(InterruptObject.ServiceRoutine, Ke_InterruptServiceRountine, "InterruptObject.ServiceRoutine");
     GEN_CHECK(InterruptObject.ServiceContext, &irq_test, "InterruptObject.ServiceContext");
