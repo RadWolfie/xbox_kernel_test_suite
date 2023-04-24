@@ -171,7 +171,7 @@ static KINTERRUPT InterruptObject;
 // 1 =USB0 | seems connected but locked up
 // 2       | (used for cascade) is connected but no response
 // 3 =GPU  | fail to connect interrupt.
-// 4 =NIC  | success connected but doesn't trigger ISR function
+// 4 =NIC  | success connected, using network irq timer setup will trigger ISR function
 // 5 =APU  | success connected but doesn't trigger ISR function
 // 6 =ACI  | success connected but doesn't trigger ISR function
 // 7       | (spurious) success connected but stuck in ISR loophell; yet if with Dpc callback, locked up; doesn't let it continue for some reason..
@@ -181,15 +181,14 @@ static KINTERRUPT InterruptObject;
 // 11      | fail to connect interrupt.
 // 12      | fail to connect interrupt.
 // 13      | success connect but ISR didn't get called.
-// 14=IDE  | is unable to connect interrupt.
+// 14=IDE  | fail to connect interrupt.
 // 15      | (spurious) success connect and ISR called.
 // 16 - 26 | (doesn't exists) fail to connect interrupt.
-static ULONG irq_test = 7;
+static ULONG irq_test = 4;
 
-#if 0 // Try attempt trigger network device's interrupt
-#define NvRegIrqStatus 0x000
-#define NvRegIrqMask 0x004
-#define NvRegMIIStatus 0x180
+#define ENABLE_NETWORK_TIMER_TEST
+#ifdef ENABLE_NETWORK_TIMER_TEST // Works!
+#include <net/nvnetdrv/nvnetdrv_regs.h>
 #define BASE ((void *)0xFEF00000)
 #define reg32(offset) (*((volatile uint32_t *)((uintptr_t)BASE + (offset))))
 #endif
@@ -205,11 +204,20 @@ static BOOLEAN __stdcall Ke_InterruptServiceRountine(
         IsrFunc_called1 = 1;
     }
 #if 1
-    static BOOL show_message = 1;
-    if (show_message) {
-        print("  Hello from Ke_InterruptServiceRountine call!"); // TODO: remove this line...
-        HalDisableSystemInterrupt(Interrupt->BusInterruptLevel); // this is what works for get out of loophell but is only a temporary workaround
-        show_message = 0;
+    static BOOL first_call = 1;
+    if (first_call) {
+        // DEBUG: Below line is only meant to test if HalEnbleSystemInterrupt is working from outside of ISR function.
+        //HalDisableSystemInterrupt(Interrupt->BusInterruptLevel); // this is what works for get out of loophell but is only a temporary workaround
+        // --------
+        reg32(NvRegIrqMask) = 0; // Works
+        //reg32(NvRegMIIStatus) = 0;
+        //reg32(NvRegIrqStatus) = 0;
+
+        //uint32_t irq = reg32(NvRegIrqStatus);
+        //uint32_t mii = reg32(NvRegMIIStatus);
+        //print("DEBUG: NvRegIrqStatus=%x", irq);
+        //print("DEBUG: NvRegMIIStatus=%x", mii);
+        first_call = 0;
 
         return TRUE;
     }
@@ -218,8 +226,17 @@ static BOOLEAN __stdcall Ke_InterruptServiceRountine(
     if (!IsrFunc_called2) {
         IsrFunc_called2 = 1;
     }
-    print("  Hello from Ke_InterruptServiceRountine call again!"); // TODO: remove this line...
-    HalDisableSystemInterrupt(Interrupt->BusInterruptLevel); // this is what works for get out of loophell but is only a temporary workaround
+    // DEBUG: Below line is only meant to test if HalEnbleSystemInterrupt is working from outside of ISR function.
+    //HalDisableSystemInterrupt(Interrupt->BusInterruptLevel); // this is what works for get out of loophell but is only a temporary workaround
+    // --------
+    reg32(NvRegIrqMask) = 0; // Works
+    //reg32(NvRegMIIStatus) = 0;
+    //reg32(NvRegIrqStatus) = 0;
+
+    //uint32_t irq = reg32(NvRegIrqStatus);
+    //uint32_t mii = reg32(NvRegMIIStatus);
+    //print("DEBUG: NvRegIrqStatus=%x", irq);
+    //print("DEBUG: NvRegMIIStatus=%x", mii);
 
     return TRUE;
 }
@@ -237,28 +254,34 @@ void test_KeInitializeInterrupt(){
     print("DEBUG: irq_test=%u", irq_test);
     ULONG InterruptVector = HalGetInterruptVector(irq_test, &irql);
 
-    //RtlZeroMemory(&InterruptObject, sizeof(KINTERRUPT));
-
     // Force set these members to verify if KeInitializeInterrupt call does set them or not.
     // According to hardware, they are not set. Let's force check them anyway.
     InterruptObject.ShareVector = 0x15;
     InterruptObject.ServiceCount = 0x25;
 
+    // TODO: test InterruptMode and ShareVector inputs 
     KeInitializeInterrupt(&InterruptObject, Ke_InterruptServiceRountine, &irq_test, InterruptVector, irql, LevelSensitive, TRUE);
 
     // Inspect each member variables are correctly setup.
     GEN_CHECK(InterruptObject.ServiceRoutine, Ke_InterruptServiceRountine, "InterruptObject.ServiceRoutine");
     GEN_CHECK(InterruptObject.ServiceContext, &irq_test, "InterruptObject.ServiceContext");
-    //print("DEBUG: InterruptObject.BusInterruptLevel=%u", InterruptObject.BusInterruptLevel);
     GEN_CHECK(InterruptObject.BusInterruptLevel, (InterruptVector-0x30), "InterruptObject.BusInterruptLevel");
     GEN_CHECK(InterruptObject.Irql, irql, "InterruptObject.Irql");
     GEN_CHECK(InterruptObject.Connected, FALSE, "InterruptObject.Connected");
     GEN_CHECK(InterruptObject.ShareVector, 0x15, "InterruptObject.ShareVector"); // Not set
-    //print("DEBUG: InterruptObject.Mode=%llu", InterruptObject.Mode);
     GEN_CHECK(InterruptObject.Mode, LevelSensitive, "InterruptObject.Mode");
     GEN_CHECK(InterruptObject.ServiceCount, 0x25, "InterruptObject.ServiceCount"); // Not set
     //TODO: How should we decode DispatchCode member variable?
     // InterruptObject.DispatchCode 
+
+    // TODO: may need to move this into separate source file for reuse code...
+#ifdef ENABLE_NETWORK_TIMER_TEST
+    // Preserve original values from network device. (best to do a reset instead)
+    uint32_t IrqMask = reg32(NvRegIrqMask);
+    uint32_t IrqStatus = reg32(NvRegIrqStatus);
+    uint32_t PollingInterval = reg32(NvRegPollingInterval);
+    uint32_t PollingControl = reg32(NvRegPollingControl);
+#endif
 
     // TODO: Fix the comment for "conected" to "connected" typo.
     if (!KeConnectInterrupt(&InterruptObject)) {
@@ -267,28 +290,25 @@ void test_KeInitializeInterrupt(){
     }
     else {
         print("SUCCESS: Able to connect interrupt");
-#if 0 // Try attempt trigger network device's interrupt
-        reg32(NvRegIrqMask) = 0xFF;
-        uint32_t nv_irq = reg32(NvRegIrqStatus);
-        print("DEBUG: NvRegIrqStatus=%x", nv_irq);
-        uint32_t nv_mii = reg32(NvRegMIIStatus);
-        print("DEBUG: NvRegMIIStatus=%x", nv_mii);
-        reg32(NvRegIrqStatus) = 0x0040; //=NVREG_IRQ_LINK
+        // TODO: may need to move this into separate source file for reuse code...
+#ifdef ENABLE_NETWORK_TIMER_TEST // Works
+        reg32(NvRegIrqMask) = NVREG_IRQ_TIMER;
+        reg32(NvRegPollingInterval) = NVREG_POLL_DEFAULT_CPU;
+        reg32(NvRegPollingControl) = NVREG_POLL_ENABLED;
 #endif
     }
 
     // might not be the right way... idk
     //HalRequestSoftwareInterrupt(irql);
-#if 0
-    KIRQL old_irql = KfRaiseIrql(irql);
-    print("DEBUG: called KfRaiseIrql");
-    KfLowerIrql(old_irql);
-    print("DEBUG: called KfLowerIrql");
-#endif
 
-    HalEnableSystemInterrupt(InterruptObject.BusInterruptLevel, InterruptObject.Mode);
+    // DEBUG: Below line is only meant to test if HalDisableSystemInterrupt is working from ISR function.
+    //HalEnableSystemInterrupt(InterruptObject.BusInterruptLevel, InterruptObject.Mode);
 
-    Sleep(500);
+    Sleep(2);
+    // Attempt call again
+    // TODO: may need to move this into separate source file for reuse code...
+    reg32(NvRegIrqMask) = NVREG_IRQ_TIMER;
+    Sleep(2);
 
     if (IsrFunc_called1) {
         print("DEBUG: IsrFunc x1 been called");
@@ -315,6 +335,15 @@ void test_KeInitializeInterrupt(){
 
     BOOLEAN wasConnected = KeDisconnectInterrupt(&InterruptObject);
     GEN_CHECK(wasConnected, FALSE, "wasConnected2");
+
+    // TODO: may need to move this into separate source file for reuse code...
+#ifdef ENABLE_NETWORK_TIMER_TEST
+    // restore original values
+    reg32(NvRegIrqMask) = IrqMask;
+    reg32(NvRegIrqStatus) = IrqStatus;
+    reg32(NvRegPollingInterval) = PollingInterval;
+    reg32(NvRegPollingControl) = PollingControl;
+#endif
 
     print_test_footer(func_num, func_name, test_passed);
 }
