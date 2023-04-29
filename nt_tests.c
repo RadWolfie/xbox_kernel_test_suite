@@ -1,5 +1,7 @@
 #include <hal/fileio.h>
 #include "output.h"
+#include "assertion_defines.h"
+#include "common_assertions.h"
 
 void test_NtAllocateVirtualMemory(){
     /* FIXME: This is a stub! implement this function! */
@@ -193,6 +195,20 @@ void test_NtQuerySemaphore(){
 
 void test_NtQuerySymbolicLinkObject(){
     /* FIXME: This is a stub! implement this function! */
+    const char* func_num = "0x00D7";
+    const char* func_name = "NtQuerySymbolicLinkObject";
+    BOOL test_passed = 1;
+    NTSTATUS result;
+    STRING LinkTarget;
+    ULONG ReturnedLength;
+
+    print_test_header(func_num, func_name);
+
+    result = NtQuerySymbolicLinkObject(NULL, &LinkTarget, &ReturnedLength);
+    GEN_CHECK(result, STATUS_INVALID_HANDLE, "thread invalid test");
+    test_passed &= assert_NTSTATUS(result, STATUS_INVALID_HANDLE, func_name);
+
+    print_test_footer(func_num, func_name, test_passed);
 }
 
 void test_NtQueryTimer(){
