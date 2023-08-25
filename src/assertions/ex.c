@@ -43,11 +43,33 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
     SetUnhandledExceptionFilter(restore_exception_filter);
 #endif
 
-    // Exception Record
     PEXCEPTION_RECORD pExceptionRecord = ExceptionInformation->ExceptionRecord;
+    PCONTEXT pContextRecord = ExceptionInformation->ContextRecord;
+
+    // Force modify to skip trigger raise again.
+    if (ehc_params->ExceptionHandlerReturn == EXCEPTION_CONTINUE_EXECUTION) {
+        // Force set to allow continue execution.
+        pExceptionRecord->ExceptionFlags = 0;
+        if (/*ehc_params->is_RtlRaise &&*/ ExceptionCode == EXCEPTION_BREAKPOINT) {
+            // Restore Eip as we pretended there's a breakpoint.
+            pContextRecord->Eip = (DWORD)pExceptionRecord->ExceptionAddress;
+        }
+        // TODO: Is this the cause for ExRaiseException to hang for extended test of EXCEPTION_CONTINUE_EXECUTION?
+        if (!ehc_params->is_RtlRaise) {
+            // Assumed it get called again.
+            pContextRecord->Esp += 2;
+        }
+    }
+
+    // Exception Record test
     GEN_CHECK(ExceptionCode, ehc_params->ExceptionCode, "ExceptionCode");
     GEN_CHECK(pExceptionRecord->ExceptionCode, ehc_params->ExceptionCode, "pExceptionRecord->ExceptionCode");
-    GEN_CHECK(pExceptionRecord->ExceptionFlags, EXCEPTION_NONCONTINUABLE/*TODO: Check if it's editable*/, "pExceptionRecord->ExceptionFlags");
+    if (ehc_params->ExceptionHandlerReturn == EXCEPTION_CONTINUE_EXECUTION) {
+        GEN_CHECK(pExceptionRecord->ExceptionFlags, 0, "pExceptionRecord->ExceptionFlags");
+    } else {
+        // NOTE: While there are EXCEPTION_UNWINDING and EXCEPTION_EXIT_UNWIND flags, it is best to let them handled internally.
+        GEN_CHECK(pExceptionRecord->ExceptionFlags, EXCEPTION_NONCONTINUABLE, "pExceptionRecord->ExceptionFlags");
+    }
     if (ehc_params->is_RtlRaiseStatus) {
         GEN_CHECK_RANGE((DWORD)pExceptionRecord->ExceptionAddress,
                         (DWORD)RtlRaiseStatus,
@@ -71,10 +93,9 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
 
     GEN_CHECK(pExceptionRecord->ExceptionRecord, NULL, "pExceptionRecord->ExceptionRecord");
 
-    // Context
-    PCONTEXT pContextRecord = ExceptionInformation->ContextRecord;
-    // When called RtlRaise(Exception|Status), they will subtract by one to ExceptionRecord->ExceptionAddress for breakpoint.
-    if (ehc_params->is_RtlRaise && ExceptionCode == EXCEPTION_BREAKPOINT) {
+    // Context record test
+    // When called RtlRaise(Exception|Status), they will subtract by one to context's Eip for assumed breakpoint.
+    if (ehc_params->ExceptionHandlerReturn != EXCEPTION_CONTINUE_EXECUTION && ehc_params->is_RtlRaise && ExceptionCode == EXCEPTION_BREAKPOINT) {
         GEN_CHECK(pContextRecord->Eip, (DWORD)pExceptionRecord->ExceptionAddress - 1, "pContextRecord->Eip");
     }
     else {
@@ -114,12 +135,6 @@ int assert_ExceptionHandlerCatcher(ExceptionHandlerCatcherParams* ehc_params,
           pContextRecord->Esp,
           pContextRecord->SegSs);
 #endif
-
-    // Force modify to skip trigger raise again.
-    if (ehc_params->ExceptionHandlerReturn == EXCEPTION_CONTINUE_EXECUTION) {
-        // Force set to allow continue execution.
-        pExceptionRecord->ExceptionFlags = 0;
-    }
 
     *ehc_params->ptests_passed &= test_passed;
     return ehc_params->ExceptionHandlerReturn;

@@ -14,7 +14,7 @@ void test_ExRaiseException()
     EXCEPTION_RECORD exception_record;
     memset(&exception_record, 0, sizeof(EXCEPTION_RECORD));
 
-    exception_record.ExceptionFlags = EXCEPTION_NONCONTINUABLE; // TODO: Extend test for this?
+    //exception_record.ExceptionFlags = EXCEPTION_NONCONTINUABLE; // TODO: Extend test for this?
     //exception_record.ExceptionRecord = NULL;
     //exception_record.ExceptionAddress; // is overrided internally
     exception_record.NumberParameters = 5; // used for ExceptionInformation (one line below)
@@ -39,12 +39,16 @@ void test_ExRaiseException()
     for (unsigned i = 0; i < (sizeof(assert_exception_code_list) / sizeof(DWORD)); i++) {
         exception_record.ExceptionCode = assert_exception_code_list[i];
         ehc_params.ExceptionCode = exception_record.ExceptionCode;
+        exception_record.ExceptionFlags = EXCEPTION_NONCONTINUABLE; // Force re-set value.
         assert_ExceptionTryExceptFinally(&ehc_params);
+        // TODO: Above function does not return here for unknown reason. Needs more depth debugging.
+        // NOTE: RtlRaiseException does work as intended, however ExRaiseStatus behave little bit differently.
     }
 
     print_test_footer(func_num, func_name, tests_passed);
 }
 
+// TODO: EXCEPTION_CONTINUE_EXECUTION test behave little bit differently, needs further investigation...
 void test_ExRaiseStatus()
 {
     const char* func_num = "0x001B";
