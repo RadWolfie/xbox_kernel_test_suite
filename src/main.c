@@ -1,6 +1,7 @@
-#include <hal/debug.h>
+#ifdef OUTPUT_TV
 #include <pbkit/pbkit.h>
 #include <hal/video.h>
+#endif
 #include <hal/xbox.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +14,7 @@
 #include "global.h"
 #include "include/func_table.h"
 
+#ifdef OUTPUT_FILE
 int load_conf_file(char *file_path)
 {
     print("Trying to open config file: %s", file_path);
@@ -70,6 +72,7 @@ int load_conf_file(char *file_path)
     free(buffer);
     return 0;
 }
+#endif
 
 static void run_tests()
 {
@@ -92,7 +95,7 @@ static void run_tests()
 }
 
 void main(void){
-
+#ifdef OUTPUT_TV
     XVideoSetMode(640, 480, 32, REFRESH_DEFAULT);
 
     switch(pb_init()){
@@ -104,18 +107,26 @@ void main(void){
     }
 
     pb_show_debug_screen();
+#endif
+
+    DbgPrint("test 123");
 
     vector_init(&tests_to_run);
+#ifdef OUTPUT_FILE
     load_conf_file("D:\\config.txt");
     open_output_file("D:\\kernel_tests.log");
-
+#endif
     print("Kernel Test Suite");
     run_tests();
 
 
     vector_free(&tests_to_run);
+#ifdef OUTPUT_FILE
     close_output_file();
+#endif
 
     Sleep(10000);
+#ifdef OUTPUT_TV
     pb_kill();
+#endif
 }

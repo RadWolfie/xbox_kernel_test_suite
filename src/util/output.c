@@ -1,4 +1,3 @@
-#include <pbkit/pbkit.h>
 #include <hal/debug.h>
 #include <windows.h>
 #include <stdio.h>
@@ -18,21 +17,23 @@ void print(char* str, ...)
     va_start (args, str);
     vsnprintf (buffer, 499, str, args);
     va_end(args);
+#ifdef OUTPUT_TV
     /**** PRINT ON TV (REAL HW) ****/
     debugPrint(buffer);
     debugPrint("\n");
     /*******************************/
-
+#endif
     /*** PRINT ON CONSOLE (CXBX) ***/
     DbgPrint("%s", buffer);
     /*******************************/
-
+#ifdef OUTPUT_FILE
     // Write information to logfile
     strcat(buffer, "\n");
     write_to_output_file(
         buffer,
         strlen(buffer)
     );
+#endif
 }
 
 void print_test_header(
@@ -55,6 +56,7 @@ void print_test_footer(
     }
 }
 
+#ifdef OUTPUT_FILE
 void open_output_file(char* file_path)
 {
     debugPrint("Creating file %s", file_path);
@@ -104,3 +106,4 @@ BOOL close_output_file()
     }
     return ret;
 }
+#endif
