@@ -31,6 +31,7 @@
 void (*kernel_thunk_table[])(void) =
 {
 	test_panic,                                                  // 0x0000 (0) NULL
+	/*
 	test_AvGetSavedDataAddress,                                  // 0x0001 (1)
 	test_AvSendTVEncoderOption,                                  // 0x0002 (2)
 	test_AvSetDisplayMode,                                       // 0x0003 (3)
@@ -131,7 +132,9 @@ void (*kernel_thunk_table[])(void) =
 	test_KeConnectInterrupt,                                     // 0x0062 (98)
 	test_KeDelayExecutionThread,                                 // 0x0063 (99)
 	test_KeDisconnectInterrupt,                                  // 0x0064 (100
+	//*/
 	test_KeEnterCriticalRegion,                                  // 0x0065 (101)
+	/*
 	test_MmGlobalData,                                           // 0x0066 (102)
 	test_KeGetCurrentIrql,                                       // 0x0067 (103)
 	test_KeGetCurrentThread,                                     // 0x0068 (104)
@@ -409,4 +412,5 @@ void (*kernel_thunk_table[])(void) =
 	test_MmDbgQueryAvailablePages,                               // 0x0179 (376) DEVKIT
 	test_MmDbgReleaseAddress,                                    // 0x017A (377) DEVKIT
 	test_MmDbgWriteCheck,                                        // 0x017A (378) DEVKIT
+	//*/
 };
