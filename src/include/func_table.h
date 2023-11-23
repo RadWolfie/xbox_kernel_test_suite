@@ -148,7 +148,9 @@ void (*kernel_thunk_table[])(void) =
 	/*
 	test_KeCancelTimer,                                          // 0x0061 (97)
 	test_KeConnectInterrupt,                                     // 0x0062 (98)
+ 	*/
 	test_KeDelayExecutionThread,                                 // 0x0063 (99)
+ 	/*
 	test_KeDisconnectInterrupt,                                  // 0x0064 (100
 	*/
 	test_KeEnterCriticalRegion,                                  // 0x0065 (101)
@@ -447,8 +449,8 @@ void (*kernel_thunk_table[])(void) =
 	test_RtlUpperString,                                         // 0x013D (317)
 	test_RtlUshortByteSwap,                                      // 0x013E (318)
 	test_RtlWalkFrameChain,                                      // 0x013F (319)
-	test_RtlZeroMemory,                                          // 0x0140 (320)
  	*/
+	test_RtlZeroMemory,                                          // 0x0140 (320)
 	test_XboxEEPROMKey,                                          // 0x0141 (321)
 	test_XboxHardwareInfo,                                       // 0x0142 (322)
 	/*
