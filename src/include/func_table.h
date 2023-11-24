@@ -395,9 +395,7 @@ void (*kernel_thunk_table[])(void) =
  	*/
 	test_RtlEnterCriticalSection,                                // 0x0115 (277)
 	test_RtlEnterCriticalSectionAndRegion,                       // 0x0116 (278)
-	/* NOTE: nboxkrnl is missing RtlInitAnsiString implement
 	test_RtlEqualString,                                         // 0x0117 (279)
- 	*/ 
 	/*
 	test_RtlEqualUnicodeString,                                  // 0x0118 (280)
 	test_RtlExtendedIntegerMultiply,                             // 0x0119 (281)
@@ -410,7 +408,9 @@ void (*kernel_thunk_table[])(void) =
 	test_RtlFreeAnsiString,                                      // 0x011E (286)
 	test_RtlFreeUnicodeString,                                   // 0x011F (287)
 	test_RtlGetCallersAddress,                                   // 0x0120 (288)
+ 	*/
 	test_RtlInitAnsiString,                                      // 0x0121 (289)
+	/*
 	test_RtlInitUnicodeString,                                   // 0x0122 (290)
  	*/
 	test_RtlInitializeCriticalSection,                           // 0x0123 (291)
