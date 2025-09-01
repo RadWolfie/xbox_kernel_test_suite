@@ -4,6 +4,27 @@
 #include "util/output.h"
 #include "assertions/defines.h"
 
+// Create two events for two threads switching
+#define THREAD_DUO_EVENTS_CREATE(Primary, Secondary) \
+    HANDLE Primary = CreateEventA(NULL, TRUE, TRUE, #Primary); \
+    HANDLE Secondary = CreateEventA(NULL, TRUE, FALSE, #Secondary)
+// Close event handles for two threads switching
+#define THREAD_DUO_EVENTS_DESTROY(Primary, Secondary) \
+    (void)CloseHandle(Secondary); \
+    (void)CloseHandle(Primary)
+// Wait for primary thread event is trigger
+#define THREAD_DUO_EVENTS_WAIT_PRIMARY(Primary) \
+    WaitForSingleObject(Primary, 1)
+// Wait for secondary thread event is trigger
+#define THREAD_DUO_EVENTS_WAIT_SECONDARY(Secondary) \
+    (void)WaitForSingleObject(Secondary, INFINITE)
+// Notify other thread to run (if possible)
+#define THREAD_DUO_EVENTS_NOTIFY(Reset, Notify) \
+    (void)SetEvent(Notify); \
+    (void)ResetEvent(Reset); \
+    (void)NtYieldExecution()
+
+
 TEST_FUNC(NtQueueApcThread)
 {
     /* FIXME: This is a stub! implement this function! */
@@ -20,12 +41,11 @@ static DWORD NTAPI NtResumeSuspendThread_thread(void* arg)
 {
     rs_thread_struct* rs_thread = (rs_thread_struct*)arg;
     do {
-        (void)WaitForSingleObject(rs_thread->hEventThread, INFINITE);
+        THREAD_DUO_EVENTS_WAIT_SECONDARY(rs_thread->hEventThread);
         rs_thread->counter++;
 
-        (void)SetEvent(rs_thread->hEventMain);
-        (void)ResetEvent(rs_thread->hEventThread);
-        (void)NtYieldExecution();
+        // Let other thread to run
+        THREAD_DUO_EVENTS_NOTIFY(rs_thread->hEventThread, rs_thread->hEventMain);
     } while(rs_thread->run);
     return 0;
 }
@@ -38,8 +58,7 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
 {
     ASSERT_HEADER;
 
-    HANDLE hEventMain = CreateEventA(NULL, TRUE, TRUE, "main");
-    HANDLE hEventThread = CreateEventA(NULL, TRUE, FALSE, "thread");
+    THREAD_DUO_EVENTS_CREATE(hEventMain, hEventThread);
 
     rs_thread_struct rs_thread = {
         .run = TRUE,
@@ -73,14 +92,11 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         ASSERT_FOOTER(test_name);
     }
 
-    // Let other thread to run
-    (void)SetEvent(hEventThread);
-    (void)ResetEvent(hEventMain);
-    (void)NtYieldExecution();
+    // Let other thread to run (even if it's suspended)
+    THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
     if (suspend) {
-
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_TIMEOUT, "result_wait");
         // Check suspended state of the thread
         GEN_CHECK(rs_thread.counter, counter, "counter");
@@ -90,11 +106,9 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         GEN_CHECK(old_suspend_count, 1, "old_suspend_count");
 
         // Let other thread to run
-        (void)SetEvent(hEventThread);
-        (void)ResetEvent(hEventMain);
-        (void)NtYieldExecution();
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_OBJECT_0, "result_wait");
         // Check running state of the thread
         counter++;
@@ -106,18 +120,16 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         GEN_CHECK(old_suspend_count, 0, "old_suspend_count");
 
         // Let other thread to run
-        (void)SetEvent(hEventThread);
-        (void)ResetEvent(hEventMain);
-        (void)NtYieldExecution();
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_OBJECT_0, "result_wait");
         // Making sure the thread is still running
         counter++;
         GEN_CHECK(rs_thread.counter, counter, "counter");
     }
     else {
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_OBJECT_0, "result_wait");
         // Check running state of the thread
         counter++;
@@ -128,11 +140,9 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         GEN_CHECK(old_suspend_count, 0, "old_suspend_count");
 
         // Let other thread to run (which in this case shouldn't be running)
-        (void)SetEvent(hEventThread);
-        (void)ResetEvent(hEventMain);
-        (void)NtYieldExecution();
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_TIMEOUT, "result_wait");
         // Check suspended state of the thread
         GEN_CHECK(rs_thread.counter, counter, "counter");
@@ -142,11 +152,9 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         GEN_CHECK(old_suspend_count, 1, "old_suspend_count");
 
         // Let other thread to run (which in this case shouldn't be running)
-        (void)SetEvent(hEventThread);
-        (void)ResetEvent(hEventMain);
-        (void)NtYieldExecution();
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_TIMEOUT, "result_wait");
         // Check suspended state of the thread
         GEN_CHECK(rs_thread.counter, counter, "counter");
@@ -156,11 +164,9 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         GEN_CHECK(old_suspend_count, 2, "old_suspend_count");
 
         // Let other thread to run (which in this case shouldn't be running)
-        (void)SetEvent(hEventThread);
-        (void)ResetEvent(hEventMain);
-        (void)NtYieldExecution();
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_TIMEOUT, "result_wait");
         // Check suspended state of the thread
         GEN_CHECK(rs_thread.counter, counter, "counter");
@@ -170,11 +176,9 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         GEN_CHECK(old_suspend_count, 1, "old_suspend_count");
 
         // Let other thread to run
-        (void)SetEvent(hEventThread);
-        (void)ResetEvent(hEventMain);
-        (void)NtYieldExecution();
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
-        result_wait = WaitForSingleObject(hEventMain, 1);
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
         GEN_CHECK(result_wait, WAIT_OBJECT_0, "result_wait");
         // Making sure the thread is still running
         counter++;
@@ -183,14 +187,11 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
 
     // End of test, tell the other thread to terminate
     rs_thread.run = FALSE;
-    (void)SetEvent(hEventThread);
-    (void)ResetEvent(hEventMain);
-    (void)NtYieldExecution();
+    THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
     // Perform the clean up process requirement
     (void)CloseHandle(hThread);
-    (void)CloseHandle(hEventThread);
-    (void)CloseHandle(hEventMain);
+    THREAD_DUO_EVENTS_DESTROY(hEventMain, hEventThread);
     ASSERT_FOOTER(test_name);
 }
 #undef THREAD_TEST_FAILED
