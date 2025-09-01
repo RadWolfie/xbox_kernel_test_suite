@@ -92,6 +92,34 @@ static BOOL NtResumeSuspendThreadHybrid(const char* test_name, BOOL suspend)
         ASSERT_FOOTER(test_name);
     }
 
+#if 0
+    typedef struct {
+        // Previous result check
+        BOOL prevThreadCounterAdd;  // 0 or 1
+        DWORD prevResultWait;       // WAIT_TIMEOUT or WAIT_OBJECT_0
+        // Next result task
+        void* nextFuncAPI;          // NtResumeThread or NtSuspendThread
+        // don't need individual check result value, it is always STATUS_SUCCESS or
+        // STATUS_INVALID_HANDLE for wrong handle input
+        ULONG nextFuncSuspendCount; // Return suspend count after call
+    } thread_tests;
+    for (unsigned i =  0; i < total; i++) {
+        THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
+
+        // Can only check previous state begin
+        result_wait = THREAD_DUO_EVENTS_WAIT_PRIMARY(hEventMain);
+        GEN_CHECK(result_wait, (WAIT_TIMEOUT|WAIT_OBJECT_0), "result_wait");
+
+        //counter++;
+        GEN_CHECK(rs_thread.counter, counter, "counter");
+        // Can only check previous state end
+
+        result = Nt(Resume|Suspend)Thread(hThread, &old_suspend_count);
+        GEN_CHECK(result, STATUS_SUCCESS, "result");
+        GEN_CHECK(old_suspend_count, 1, "old_suspend_count");
+    }
+#endif
+
     // Let other thread to run (even if it's suspended)
     THREAD_DUO_EVENTS_NOTIFY(hEventMain, hEventThread);
 
