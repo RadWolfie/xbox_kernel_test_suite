@@ -142,7 +142,98 @@ TEST_FUNC(NtPulseEvent)
 
 TEST_FUNC(NtQueryEvent)
 {
-    /* FIXME: This is a stub! implement this function! */
+    TEST_BEGIN();
+
+    HANDLE handle;
+    PVOID object;
+    NTSTATUS status;
+    ANSI_STRING obj_name;
+
+    // Test #1, test invalid handles
+    EVENT_BASIC_INFORMATION info = { 0 };
+    status = NtQueryEvent(NULL, &info);
+    GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+    GEN_CHECK(info.EventState, 0, "info.EventState");
+    GEN_CHECK(info.EventType, 0, "info.EventType");
+    status = NtQueryEvent((HANDLE)0xBEEF, &info);
+    GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+    GEN_CHECK(info.EventState, 0, "info.EventState");
+    GEN_CHECK(info.EventType, 0, "info.EventType");
+
+    RtlInitAnsiString(&obj_name, TEST_GET_API_NAME);
+    OBJECT_ATTRIBUTES obj_attr;
+    obj_attr.ObjectName = &obj_name;
+    InitializeObjectAttributes(&obj_attr, &obj_name, 0, ObWin32NamedObjectsDirectory(), NULL);
+
+    typedef struct {
+        NTSTATUS expected_status, expected_status2, expected_status3;
+        EVENT_BASIC_INFORMATION expected_info, expected_info2, expected_info3;
+        NTSTATUS return_status, return_status2, return_status3;
+        EVENT_BASIC_INFORMATION return_info, return_info2, return_info3;
+    } query_test;
+
+    // TODO: Unsure if need to extend tests to Clear/Pulse/Set...
+    query_test query_tests[2] = {
+        // The list of tests below cannot be rearrange in any way.
+        // NotificationEvent
+        { .expected_status = STATUS_SUCCESS, .expected_info = { .EventState = TRUE, .EventType = NotificationEvent },
+          .expected_status2 = STATUS_SUCCESS, .expected_info2 = { .EventState = FALSE, .EventType = NotificationEvent },
+          .expected_status3 = STATUS_SUCCESS, .expected_info3 = { .EventState = 2, .EventType = NotificationEvent } },
+        // SynchronizationEvent
+        { .expected_status = STATUS_SUCCESS, .expected_info = { .EventState = TRUE, .EventType = SynchronizationEvent },
+          .expected_status2 = STATUS_SUCCESS, .expected_info2 = { .EventState = FALSE, .EventType = SynchronizationEvent },
+          .expected_status3 = STATUS_SUCCESS, .expected_info3 = { .EventState = 2, .EventType = SynchronizationEvent } }
+    };
+
+    for (unsigned i = 0; i < ARRAY_SIZE(query_tests); i++) {
+        query_test* test = &query_tests[i];
+        // Test #2, with initialize state
+        status = NtCreateEvent(&handle,
+                               &obj_attr,
+                               i, // Use i number for EVENT_TYPE switch
+                               TRUE);
+
+        test->return_status = NtQueryEvent(handle, &test->return_info);
+
+        if (NT_SUCCESS(status)) {
+            (void)NtClose(handle);
+        }
+
+        // Test #3, without initialize state
+        status = NtCreateEvent(&handle,
+                               &obj_attr,
+                               i, // Use i number for EVENT_TYPE switch
+                               FALSE);
+
+        test->return_status2 = NtQueryEvent(handle, &test->return_info2);
+
+        if (NT_SUCCESS(status)) {
+            (void)NtClose(handle);
+        }
+
+        // Test #4, with invalid initialize state
+        status = NtCreateEvent(&handle,
+                               &obj_attr,
+                               i, // Use i number for EVENT_TYPE switch
+                               2);
+
+        test->return_status3 = NtQueryEvent(handle, &test->return_info3);
+
+        if (NT_SUCCESS(status)) {
+            (void)NtClose(handle);
+        }
+    }
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_status, expected_status, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_info.EventState, expected_info.EventState, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_info.EventType, expected_info.EventType, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_status2, expected_status2, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_info2.EventState, expected_info2.EventState, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_info2.EventType, expected_info2.EventType, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_status3, expected_status3, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_info3.EventState, expected_info3.EventState, ARRAY_SIZE(query_tests), "query_tests");
+    GEN_CHECK_ARRAY_MEMBER(query_tests, return_info3.EventType, expected_info3.EventType, ARRAY_SIZE(query_tests), "query_tests");
+
+    TEST_END();
 }
 
 TEST_FUNC(NtSetEvent)
