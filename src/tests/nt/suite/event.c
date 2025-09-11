@@ -6,7 +6,60 @@
 
 TEST_FUNC(NtClearEvent)
 {
-    /* FIXME: This is a stub! implement this function! */
+    TEST_BEGIN();
+
+    HANDLE handle;
+    PVOID object;
+    NTSTATUS status;
+    ANSI_STRING obj_name;
+
+    // Test #1, test invalid handles
+    EVENT_BASIC_INFORMATION info = { 0 };
+    status = NtClearEvent(NULL);
+    GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+    status = NtClearEvent((HANDLE)0xBEEF);
+    GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+
+    RtlInitAnsiString(&obj_name, TEST_GET_API_NAME);
+    OBJECT_ATTRIBUTES obj_attr;
+    obj_attr.ObjectName = &obj_name;
+    InitializeObjectAttributes(&obj_attr, &obj_name, 0, ObWin32NamedObjectsDirectory(), NULL);
+
+    typedef struct {
+        EVENT_TYPE input_event_type; // NotificationEvent or SynchronizationEvent
+        BOOLEAN input_init_state;
+        NTSTATUS expected_status, expected_status2, expected_status3;
+        NTSTATUS return_status, return_status2, return_status3;
+    } clear_test;
+    clear_test clear_tests[] = {
+        // NotificationEvent
+        { .input_event_type = NotificationEvent, .input_init_state = FALSE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS },
+        { .input_event_type = NotificationEvent, .input_init_state = TRUE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS },
+        // SynchronizationEvent
+        { .input_event_type = SynchronizationEvent, .input_init_state = FALSE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS },
+        { .input_event_type = SynchronizationEvent, .input_init_state = TRUE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS },
+    };
+    for (unsigned i = 0; i < ARRAY_SIZE(clear_tests); i++) {
+        clear_test* test = &clear_tests[i];
+        // Test #2, verify creation event is initialize or not
+        (void)NtCreateEvent(&handle,
+                            &obj_attr,
+                            test->input_event_type,
+                            test->input_init_state);
+
+        test->return_status = NtClearEvent(handle);
+        test->return_status2 = NtClearEvent(handle);
+
+        (void)NtClose(handle);
+    }
+    GEN_CHECK_ARRAY_MEMBER(clear_tests, return_status, expected_status, ARRAY_SIZE(clear_tests), "clear_tests");
+    GEN_CHECK_ARRAY_MEMBER(clear_tests, return_status2, expected_status2, ARRAY_SIZE(clear_tests), "clear_tests");
+
+    TEST_END();
 }
 
 TEST_FUNC(NtCreateEvent)
