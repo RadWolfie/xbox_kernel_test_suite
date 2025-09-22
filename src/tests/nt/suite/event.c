@@ -89,7 +89,6 @@ TEST_FUNC(NtClearEvent)
     ANSI_STRING obj_name;
 
     // Test #1, test invalid handles
-    EVENT_BASIC_INFORMATION info = { 0 };
     status = NtClearEvent(NULL);
     GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
     status = NtClearEvent((HANDLE)0xBEEF);
