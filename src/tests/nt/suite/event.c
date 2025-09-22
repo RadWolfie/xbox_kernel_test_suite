@@ -1,5 +1,6 @@
 #include <xboxkrnl/xboxkrnl.h>
 #include <processthreadsapi.h> // for CreateThread
+#include <synchapi.h> // for Sleep
 
 #include "util/output.h"
 #include "util/misc.h"
@@ -76,6 +77,18 @@ static DWORD NTAPI NtSetEvent_sync2(void* arg)
         THREAD_DUO_EVENTS_SET(thread_data->hEventSync1);
     } while(thread_data->counter2 < MAX_COUNTER_TOTAL);
     thread_data->terminate = TRUE;
+    return 0;
+}
+
+static DWORD NTAPI NtPulseEvent_n(void* arg)
+{
+    NTSTATUS status;
+    thread_notify_counter_s* thread_data = (thread_notify_counter_s*)arg;
+    while(!thread_data->terminate) {
+        THREAD_PULSE_EVENT_WAIT(thread_data, thread_data->hEvent, status);
+
+        thread_data->counter++;
+    }
     return 0;
 }
 
@@ -264,10 +277,210 @@ TEST_FUNC(NtCreateEvent)
 
 TEST_FUNC(NtPulseEvent)
 {
-    /* FIXME: This is a stub! implement this function! */
-    // Maybe could be implement...
-    // What it does is ...
-    // Pulse the event: sets it signaled and then immediately non-signaled
+    TEST_BEGIN();
+
+    HANDLE handle;
+    PVOID object;
+    NTSTATUS status;
+    ANSI_STRING obj_name;
+    ULONG counter;
+
+    // Test #1, test invalid handles
+    LONG previous_state = -1;
+    status = NtPulseEvent(NULL, &previous_state);
+    GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+    GEN_CHECK(previous_state, -1, "previous_state");
+    status = NtPulseEvent((HANDLE)0xBEEF, &previous_state);
+    GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+    GEN_CHECK(previous_state, -1, "previous_state");
+
+    RtlInitAnsiString(&obj_name, TEST_GET_API_NAME);
+    OBJECT_ATTRIBUTES obj_attr;
+    obj_attr.ObjectName = &obj_name;
+    InitializeObjectAttributes(&obj_attr, &obj_name, 0, ObWin32NamedObjectsDirectory(), NULL);
+
+    typedef struct {
+        EVENT_TYPE input_event_type; // NotificationEvent or SynchronizationEvent
+        BOOLEAN input_init_state;
+        LONG expected_prev_state, expected_prev_state2, expected_prev_state3, expected_prev_state4;
+        NTSTATUS expected_status, expected_status2, expected_status3, expected_status4;
+        LONG return_prev_state, return_prev_state2, return_prev_state3, return_prev_state4;
+        NTSTATUS return_status, return_status2, return_status3, return_status4;
+    } set_single_test;
+    set_single_test set_single_tests[] = {
+        // NotificationEvent
+        { .input_event_type = NotificationEvent, .input_init_state = FALSE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS, .expected_status3 = STATUS_SUCCESS,
+          .expected_prev_state = FALSE, .expected_prev_state2 = FALSE,
+          .expected_prev_state3 = FALSE, .expected_prev_state4 = FALSE },
+        { .input_event_type = NotificationEvent, .input_init_state = TRUE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS, .expected_status3 = STATUS_SUCCESS,
+          .expected_prev_state = TRUE, .expected_prev_state2 = FALSE,
+          .expected_prev_state3 = FALSE, .expected_prev_state4 = FALSE },
+        // SynchronizationEvent
+        { .input_event_type = SynchronizationEvent, .input_init_state = FALSE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS, .expected_status3 = STATUS_SUCCESS,
+          .expected_prev_state = FALSE, .expected_prev_state2 = FALSE,
+          .expected_prev_state3 = FALSE, .expected_prev_state4 = FALSE },
+        { .input_event_type = SynchronizationEvent, .input_init_state = TRUE,
+          .expected_status = STATUS_SUCCESS, .expected_status2 = STATUS_SUCCESS, .expected_status3 = STATUS_SUCCESS,
+          .expected_prev_state = TRUE , .expected_prev_state2 = FALSE,
+          .expected_prev_state3 =  FALSE , .expected_prev_state4 = FALSE },
+    };
+    for (unsigned i = 0; i < ARRAY_SIZE(set_single_tests); i++) {
+        set_single_test* test = &set_single_tests[i];
+        // Test #2, verify creation event is initialize or not
+        (void)NtCreateEvent(&handle,
+                            &obj_attr,
+                            test->input_event_type,
+                            test->input_init_state);
+        test->return_status = NtPulseEvent(handle, &test->return_prev_state);
+        (void)NtClearEvent(handle);
+
+        // Test #3, verify if event is (re-)initialize
+        test->return_status2 = NtPulseEvent(handle, &test->return_prev_state2);
+
+        // Test #4, verify if event is remain initialize
+        test->return_status3 = NtPulseEvent(handle, &test->return_prev_state3);
+
+        // Test #5, verify if event is initialize again
+        (void)NtClearEvent(handle);
+        test->return_status4 = NtPulseEvent(handle, &test->return_prev_state4);
+
+        (void)NtClose(handle);
+    }
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_status, expected_status, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_status2, expected_status2, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_status3, expected_status3, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_status4, expected_status4, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_prev_state, expected_prev_state, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_prev_state2, expected_prev_state2, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_prev_state3, expected_prev_state3, ARRAY_SIZE(set_single_tests), "set_single_tests");
+    GEN_CHECK_ARRAY_MEMBER(set_single_tests, return_prev_state4, expected_prev_state4, ARRAY_SIZE(set_single_tests), "set_single_tests");
+
+
+    // Test #6 - SynchronizationEvent test (aka without manual reset event state)
+    counter = 0;
+    (void)NtCreateEvent(&handle, &obj_attr, SynchronizationEvent, FALSE);
+    thread_notify_counter_s thread1_data_se = {
+        .hEvent = handle,
+        .counter = 0,
+        .completed = FALSE,
+        .terminate = FALSE,
+        .id = 1
+    };
+    thread_notify_counter_s thread2_data_se = {
+        .hEvent = handle,
+        .counter = 0,
+        .completed = FALSE,
+        .terminate = FALSE,
+        .id = 2
+    };
+    HANDLE thread1 = CreateThread(NULL, 0, NtPulseEvent_n, (void*)&thread1_data_se, 0, NULL);
+    HANDLE thread2 = CreateThread(NULL, 0, NtPulseEvent_n, (void*)&thread2_data_se, 0, NULL);
+    GEN_CHECK(thread1 != NULL, TRUE, "valid handle (thread1)");
+    GEN_CHECK(thread2 != NULL, TRUE, "valid handle (thread2)");
+    if (!thread1 || !thread2) {
+        if (thread1) {
+            (void)NtClose(thread1);
+        }
+        if (thread2) {
+            (void)NtClose(thread2);
+        }
+        (void)NtClose(handle);
+        TEST_END();
+    }
+
+    do {
+        Sleep(1); // Required
+        status = NtPulseEvent(handle, &previous_state);
+        if (!NT_SUCCESS(status)) {
+            break;
+        }
+        Sleep(1); // Required
+        counter++;
+    } while(counter < MAX_COUNTER_TOTAL);
+
+    // Mark threads to be terminate
+    thread1_data_se.terminate = TRUE;
+    thread2_data_se.terminate = TRUE;
+    // Allow thread #1 or #2 to terminate itself since it only notify one at time
+    Sleep(1); // Required
+    status = NtPulseEvent(handle, &previous_state);
+    // Allow thread #1 or #2 to terminate itself since it only notify one at time (x2)
+    Sleep(1); // Required
+    status = NtPulseEvent(handle, &previous_state);
+
+    // Wait for pulse event's threads to be done testing
+    // then clean up threads and handles
+    THREAD_PULSE_EVENT_DESTROY_THREAD_WAIT(thread1);
+    THREAD_PULSE_EVENT_DESTROY_THREAD_WAIT(thread2);
+    (void)NtClose(handle);
+
+    // Verify test results
+    GEN_CHECK(thread1_data_se.counter + thread1_data_se.counter, MAX_COUNTER_TOTAL, "counter1 + counter2");
+
+    // Test #7 - NotificationEvent test (aka with manual reset event state)
+    counter = 0;
+    status = NtCreateEvent(&handle, &obj_attr, NotificationEvent, FALSE);
+    GEN_CHECK(status, STATUS_SUCCESS, "status");
+
+    thread_notify_counter_s thread1_data_ne = {
+        .hEvent = handle,
+        .counter = 0,
+        .completed = FALSE,
+        .terminate = FALSE,
+        .id = 1
+    };
+    thread_notify_counter_s thread2_data_ne = {
+        .hEvent = handle,
+        .counter = 0,
+        .completed = FALSE,
+        .terminate = FALSE,
+        .id = 2
+    };
+    thread1 = CreateThread(NULL, 0, NtPulseEvent_n, (void*)&thread1_data_ne, 0, NULL);
+    thread2 = CreateThread(NULL, 0, NtPulseEvent_n, (void*)&thread2_data_ne, 0, NULL);
+    GEN_CHECK(thread1 != NULL, TRUE, "valid handle (thread1)");
+    GEN_CHECK(thread2 != NULL, TRUE, "valid handle (thread2)");
+    if (!thread1 || !thread2) {
+        if (thread1) {
+            (void)NtClose(thread1);
+        }
+        if (thread2) {
+            (void)NtClose(thread2);
+        }
+        (void)NtClose(handle);
+        TEST_END();
+    }
+
+    do {
+        Sleep(1); // Required
+        status = NtPulseEvent(handle, NULL);
+        if (!NT_SUCCESS(status)) {
+            break;
+        }
+        Sleep(1); // Required
+        counter++;
+    } while (counter < MAX_COUNTER_TOTAL);
+
+    // Mark threads to be terminate
+    thread1_data_ne.terminate = TRUE;
+    thread2_data_ne.terminate = TRUE;
+    Sleep(1); // Required
+    status = NtPulseEvent(handle, &previous_state);
+
+    // Wait for sync threads to be terminated
+    THREAD_PULSE_EVENT_DESTROY_THREAD_WAIT(thread1);
+    THREAD_PULSE_EVENT_DESTROY_THREAD_WAIT(thread2);
+    (void)NtClose(handle);
+
+    // Verify the tests
+    GEN_CHECK(thread1_data_ne.counter, counter, "thread1_data_ne.counter");
+    GEN_CHECK(thread2_data_ne.counter, counter, "thread2_data_ne.counter");
+    GEN_CHECK(counter, MAX_COUNTER_TOTAL, "counter");
+
+    TEST_END();
 }
 
 TEST_FUNC(NtQueryEvent)

@@ -43,3 +43,19 @@ static LARGE_INTEGER thread_duo_wait_delay10 = { .QuadPart = ((LONGLONG)10) * -1
     (void)NtSetEvent(Notify, NULL); \
     /* Allow the other thread that may in need to process */ \
     (void)NtYieldExecution()
+
+// Wait until thread is terminated
+#define THREAD_PULSE_EVENT_DESTROY_THREAD_WAIT(hThread) \
+    (void)NtWaitForSingleObject(hThread, FALSE, &infinite); \
+    (void)NtClose(hThread)
+// Wait for event to trigger
+#define THREAD_PULSE_EVENT_WAIT(data, hEvent, status) \
+    status = NtWaitForSingleObject(hEvent, FALSE, &infinite); \
+    if (data->terminate) { \
+        return 0; \
+    } \
+    if (status != STATUS_WAIT_0) { \
+        print("  %s thread terminated with 0x%08X", __func__ , status); \
+        data->terminate = TRUE; \
+        return 1; \
+    }
