@@ -377,11 +377,13 @@ TEST_FUNC(NtSetEvent)
     ANSI_STRING obj_name;
 
     // Test #1, test invalid handles
-    EVENT_BASIC_INFORMATION info = { 0 };
-    status = NtClearEvent(NULL);
+    LONG previous_state = -1;
+    status = NtSetEvent(NULL, &previous_state);
     GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
-    status = NtClearEvent((HANDLE)0xBEEF);
+    GEN_CHECK(previous_state, -1, "previous_state");
+    status = NtSetEvent((HANDLE)0xBEEF, &previous_state);
     GEN_CHECK(status, STATUS_INVALID_HANDLE, "status");
+    GEN_CHECK(previous_state, -1, "previous_state");
 
     RtlInitAnsiString(&obj_name, TEST_GET_API_NAME);
     OBJECT_ATTRIBUTES obj_attr;
