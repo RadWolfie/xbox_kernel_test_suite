@@ -12,7 +12,8 @@ void print_test_footer(int, const char*, BOOL);
 #define TEST_GET_API_NAME api_name
 #define TEST_BEGIN() print_test_header(api_num, api_name); \
     BOOL TEST_GET_VAR = 1
-#define TEST_END() print_test_footer(api_num, api_name, test_passed)
+#define TEST_END() print_test_footer(api_num, api_name, test_passed); \
+    return
 #define TEST_UNIMPLEMENTED()
 #define TEST_FAILED() TEST_GET_VAR = 0
 #define TEST_IS_FAILED (!TEST_GET_VAR)
