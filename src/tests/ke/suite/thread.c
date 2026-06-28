@@ -9,8 +9,7 @@
 #include "util/exception.h"
 #include "assertions/defines.h"
 
-// TODO: Add below into nxdk's xboxkrnl/ntstatus.h file
-#define STATUS_SUSPEND_COUNT_EXCEEDED 0xC000004A
+#include "util/nxdk_patch.h" // TODO: Remove this line once STATUS_SUSPEND_COUNT_EXCEEDED is upstream.
 
 typedef struct {
     BOOL terminate;
