@@ -22,17 +22,17 @@
     }
 #define GEN_CHECK(check_var, expected_var, varname) GEN_CHECK_EX(check_var, expected_var, varname, __LINE__)
 
-#define GEN_CHECK_RANGE_EX(check_var, expected_var, size, varname, func_line) \
-    if((check_var) < (expected_var) || (check_var) > (expected_var) + (size)) { \
+#define GEN_CHECK_RANGE_EX(check_var, expected_var, length, varname, func_line) \
+    if((check_var) < (expected_var) || (check_var) > (expected_var) + (length)) { \
         print( \
             ((sizeof(check_var) > 4) ? \
             "  ERROR(line %d): Expected range %s = 0x%x-0x%llx, Got = 0x%llx" : \
             "  ERROR(line %d): Expected range %s = 0x%x-0x%x, Got = 0x%x") \
-            , func_line, varname, (expected_var), (expected_var) + (size), (check_var) \
+            , func_line, varname, (expected_var), (expected_var) + (length), (check_var) \
         ); \
         TEST_FAILED(); \
     }
-#define GEN_CHECK_RANGE(check_var, expected_var, size, varname) GEN_CHECK_RANGE_EX(check_var, expected_var, size, varname, __LINE__)
+#define GEN_CHECK_RANGE(check_var, expected_var, length, varname) GEN_CHECK_RANGE_EX(check_var, expected_var, length, varname, __LINE__)
 
 #define GEN_CHECK_ARRAY_EX(check_var, expected_var, size, varname, func_line) \
     for (unsigned i = 0; i < (size); i++) { \
