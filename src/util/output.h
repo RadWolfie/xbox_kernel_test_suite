@@ -17,7 +17,6 @@ void print_test_footer(int, const char*, BOOL, const char*);
 #define TEST_END() TEST_END_EX(NULL)
 #define TEST_SKIP_OPT(reason) print("  SKIP(line %d): %s", __LINE__, reason)
 #define TEST_SKIP_END(reason) TEST_END_EX(reason)
-#define TEST_UNIMPLEMENTED()
 #define TEST_FAILED() TEST_GET_VAR = 0
 #define TEST_IS_FAILED (!TEST_GET_VAR)
 #define TEST_IS_SUCCESS (TEST_GET_VAR)
