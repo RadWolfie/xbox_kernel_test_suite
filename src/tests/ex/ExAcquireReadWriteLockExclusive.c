@@ -71,7 +71,6 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
     // Avoid spinning forever in the loop below.
     if (TEST_IS_FAILED) {
         TEST_END();
-        return;
     }
     ExReleaseReadWriteLock(&ReadWriteLock);
 
@@ -86,7 +85,6 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
         print("  ERROR: did not create thread");
         TEST_FAILED();
         TEST_END();
-        return;
     }
 
     TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
@@ -94,7 +92,6 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
         print("  ERROR: LockCount did not equal 1\n");
         TEST_FAILED();
         TEST_END();
-        return;
     }
     // Second thread attempted to acquire the exclusive lock, incrementing WritersWaitingCount
     assert_ERWLOCK_equals(&ReadWriteLock, 1, 1, 0, 0);
