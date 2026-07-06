@@ -55,10 +55,10 @@ void print_test_footer(
     BOOL tests_passed,
     const char* reason)
 {
-    if(reason) {
+    if (reason) {
         print("%03u - %s: SKIPPED - %s", api_num, api_name, reason);
     }
-    else if(tests_passed) {
+    else if (tests_passed) {
         print("%03u - %s: All tests PASSED", api_num, api_name);
     }
     else {
@@ -93,10 +93,10 @@ int write_to_output_file(
         &bytes_written,
         NULL
     );
-    if(!ret && output_video) {
+    if (!ret && output_video) {
         debugPrint("ERROR: Could not write to output file\n");
     }
-    if(bytes_written != num_bytes_to_print) {
+    if (bytes_written != num_bytes_to_print) {
         if (output_video) {
             debugPrint("ERROR: Bytes written = %lu, bytes expected to write = %lu\n",
                        bytes_written, num_bytes_to_print);
@@ -109,7 +109,7 @@ int write_to_output_file(
 void close_output_file()
 {
     BOOL ret = CloseHandle(output_filehandle);
-    if(!ret) {
+    if (!ret) {
         print("ERROR: Could not close output file");
     }
 }

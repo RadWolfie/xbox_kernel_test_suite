@@ -18,7 +18,7 @@ TEST_FUNC(RtlAnsiStringToUnicodeString)
     UNICODE_STRING dest_str = { 0 };
     ANSI_STRING src_str = { 0 };
     CHAR* long_str = malloc(sizeof(CHAR) * long_str_size);
-    if(long_str == NULL) {
+    if (long_str == NULL) {
         print("ERROR: Could not malloc long_str");
     }
 

@@ -81,7 +81,7 @@ static BOOL NtResumeSuspendThreadInline(const char* test_name, BOOL suspend, thr
 
     HANDLE hThread = CreateThread(NULL, 0, NtResumeSuspendThread_sync, (void*)&thread_data, (suspend ? CREATE_SUSPENDED : 0), NULL);
     GEN_CHECK(hThread != NULL, TRUE, "valid handle");
-    if(!hThread) {
+    if (!hThread) {
         print("  ERROR: Did not create thread");
         TEST_FAILED();
         THREAD_DUO_EVENTS_DESTROY(hEventMain, hEventThread);

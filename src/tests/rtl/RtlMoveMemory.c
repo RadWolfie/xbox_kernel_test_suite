@@ -12,24 +12,24 @@ TEST_FUNC(RtlMoveMemory)
     char rnd_letter;
     /* CREATE AND FILL THE SOURCE BUFFER */
     CHAR* src_buffer = malloc(sizeof(CHAR) * size);
-    if(src_buffer == NULL) {
+    if (src_buffer == NULL) {
         print("ERROR: Could not malloc src_buffer");
     }
     srand(seed);
-    for(int k=0; k<size; k++){
+    for (int k=0; k<size; k++) {
         rnd_letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
         src_buffer[k] = rnd_letter;
     }
 
     /* CREATE AND FILL THE DESTINATION BUFFER (using RtlMoveMemory)*/
     CHAR* dest_buffer = malloc(sizeof(CHAR) * size);
-    if(dest_buffer == NULL) {
+    if (dest_buffer == NULL) {
         print("ERROR: Could not malloc dest_buffer");
     }
     RtlMoveMemory(dest_buffer, (void*)src_buffer, size);
 
-    for(int k=0; k<size; k++){
-        if(src_buffer[k] != dest_buffer[k]){
+    for (int k=0; k<size; k++) {
+        if (src_buffer[k] != dest_buffer[k]) {
             TEST_FAILED();
             break;
         }

@@ -17,13 +17,13 @@ BOOL assert_ansi_string_ex(
     GEN_CHECK_EX(string->Length, expected_Length, "Length", line_number);
     GEN_CHECK_EX(string->MaximumLength, expected_MaximumLength, "MaximumLength", line_number);
 
-    if(expected_Buffer == NULL) {
+    if (expected_Buffer == NULL) {
         GEN_CHECK_EX(string->Buffer, NULL, "Buffer is NULL", line_number);
     }
     else {
         int result = memcmp(string->Buffer, expected_Buffer, expected_Length);
         GEN_CHECK_EX(result, 0, "memcmp result of Buffer", line_number);
-        if(result) {
+        if (result) {
             print("  Buffer = %s, expected_Buffer = %s", string->Buffer, expected_Buffer);
         }
     }
@@ -44,7 +44,7 @@ BOOL assert_unicode_string_ex(
     GEN_CHECK_EX(string->Length, expected_Length, "Length", line_number);
     GEN_CHECK_EX(string->MaximumLength, expected_MaximumLength, "MaximumLength", line_number);
 
-    if(expected_Buffer == NULL) {
+    if (expected_Buffer == NULL) {
         GEN_CHECK_EX(string->Buffer, NULL, "Buffer is null", line_number);
     }
     else {

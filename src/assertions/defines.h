@@ -5,13 +5,13 @@
 #define ASSERT_HEADER BOOL test_passed = 1;
 
 #define ASSERT_FOOTER(test_name) \
-    if(!test_passed) { \
+    if (!test_passed) { \
         print("  Test '%s' FAILED", test_name); \
     } \
     return test_passed;
 
 #define GEN_CHECK_EX(check_var, expected_var, varname, func_line) \
-    if((check_var) != (expected_var)) { \
+    if ((check_var) != (expected_var)) { \
         print( \
             ((sizeof(check_var) > 4) ? \
             "  ERROR(line %d): Expected %s = 0x%llx, Got = 0x%llx" : \
@@ -23,7 +23,7 @@
 #define GEN_CHECK(check_var, expected_var, varname) GEN_CHECK_EX(check_var, expected_var, varname, __LINE__)
 
 #define GEN_CHECK_RANGE_EX(check_var, expected_var, length, varname, func_line) \
-    if((check_var) < (expected_var) || (check_var) > (expected_var) + (length)) { \
+    if ((check_var) < (expected_var) || (check_var) > (expected_var) + (length)) { \
         print( \
             ((sizeof(check_var) > 4) ? \
             "  ERROR(line %d): Expected range %s = 0x%x-0x%llx, Got = 0x%llx" : \

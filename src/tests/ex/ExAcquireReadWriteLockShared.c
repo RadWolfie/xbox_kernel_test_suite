@@ -33,8 +33,8 @@ static void increment_thread3_status(control_struct* control, const char* callin
 
 static BOOL timed_poll_for_value(ULONG* poll_var, ULONG wait_value)
 {
-    for(BYTE i = 0; i < 10; i++) {
-        if(*poll_var == wait_value) {
+    for (BYTE i = 0; i < 10; i++) {
+        if (*poll_var == wait_value) {
             return 1;
         }
         Sleep(10);
@@ -49,7 +49,7 @@ static void NTAPI ExAcquireReadWriteLockShared_thread2(void* arg)
 
     // Test case where LockCount != 0, and ReaderEntryCount == 0, which should cause this thread to wait.
     BOOL value_found = timed_poll_for_value(&control->thread2_cmd, 1);
-    if(!value_found) {
+    if (!value_found) {
         print("  ERROR: %s failed waiting for thread2_cmd == 1", api_name);
         PsTerminateSystemThread(STATUS_TIMEOUT);
     }
@@ -61,7 +61,7 @@ static void NTAPI ExAcquireReadWriteLockShared_thread2(void* arg)
 
     // Test case where LockCount != 0, ReaderEntryCount != 0, and WritersWaitingCount == 0. Should grab lock fine.
     value_found = timed_poll_for_value(&control->thread2_cmd, 2);
-    if(!value_found) {
+    if (!value_found) {
         print("  ERROR: %s failed waiting for thread2_cmd == 2", api_name);
         PsTerminateSystemThread(STATUS_TIMEOUT);
     }
@@ -69,7 +69,7 @@ static void NTAPI ExAcquireReadWriteLockShared_thread2(void* arg)
     increment_thread2_status(control, api_name);
 
     value_found = timed_poll_for_value(&control->thread2_cmd, 3);
-    if(!value_found) {
+    if (!value_found) {
         print("  ERROR: %s failed waiting for thread2_cmd == 3", api_name);
         PsTerminateSystemThread(STATUS_TIMEOUT);
     }
@@ -79,7 +79,7 @@ static void NTAPI ExAcquireReadWriteLockShared_thread2(void* arg)
 
     // Test case where LockCount != 0, ReaderEntryCount != 0, and WritersWaitingCount != 0. Should wait for exclusive thread to release.
     value_found = timed_poll_for_value(&control->thread2_cmd, 4);
-    if(!value_found) {
+    if (!value_found) {
         print("  ERROR: %s failed waiting for thread2_cmd == 4", api_name);
         PsTerminateSystemThread(STATUS_TIMEOUT);
     }
@@ -113,7 +113,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     // Acquire shared lock on empty lock
     assert_ERWLOCK_equals(&ReadWriteLock, 0, 0, 0, 1);
     // Avoid spinning forever in the loop below.
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         TEST_END();
         return;
     }
@@ -124,7 +124,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     control_struct control = {&ReadWriteLock, 0, 0, 0, 0};
     HANDLE handle;
     NTSTATUS result = PsCreateSystemThread(&handle, NULL, ExAcquireReadWriteLockShared_thread2, (void*)&control, 0);
-    if(result != STATUS_SUCCESS) {
+    if (result != STATUS_SUCCESS) {
         print("  ERROR: Did not create thread2");
         TEST_FAILED();
         TEST_END();
@@ -135,14 +135,14 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     increment_thread2_cmd(&control, api_name);
 
     test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 1", api_name);
         TEST_END();
         return;
     }
     // Second thread attempted to acquire the exclusive lock, incrementing ReadersWaitingCount and waiting
     assert_ERWLOCK_equals(&ReadWriteLock, 1, 0, 1, 0);
-    if(control.thread2_status == 1) {
+    if (control.thread2_status == 1) {
         TEST_FAILED();
         print("  ERROR: The second thread was not supposed to write before the lock is released on the first thread.");
         TEST_END();
@@ -151,7 +151,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
 
     ExReleaseReadWriteLock(&ReadWriteLock);
     test_passed = timed_poll_for_value(&control.thread2_status, 2);
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for thread2_status == 2", api_name);
         TEST_END();
         return;
@@ -162,7 +162,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     increment_thread2_cmd(&control, api_name);
 
     test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 1", api_name);
         TEST_END();
         return;
@@ -170,7 +170,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     // Second thread attempted to acquire the shared lock, incrementing ReaderEntryCount and getting the lock
     assert_ERWLOCK_equals(&ReadWriteLock, 1, 0, 0, 2);
     Sleep(10);
-    if(control.thread2_status != 3) {
+    if (control.thread2_status != 3) {
         TEST_FAILED();
         print("  ERROR: The second thread was supposed to obtain the shared lock and update thread2_status.");
         TEST_END();
@@ -180,7 +180,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     increment_thread2_cmd(&control, api_name);
     ExReleaseReadWriteLock(&ReadWriteLock);
     test_passed = timed_poll_for_value(&control.thread2_status, 4);
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for thread2_status == 4", api_name);
         TEST_END();
         return;
@@ -191,7 +191,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     increment_thread2_cmd(&control, api_name);
 
     test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 1", api_name);
         TEST_END();
         return;
@@ -199,21 +199,21 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
 
     HANDLE handle_thread3;
     result = PsCreateSystemThread(&handle_thread3, NULL, ExAcquireReadWriteLockShared_thread3, (void*)&control, 0);
-    if(result != STATUS_SUCCESS) {
+    if (result != STATUS_SUCCESS) {
         TEST_FAILED();
         TEST_END();
         return;
     }
 
     test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 2);
-    if(TEST_IS_FAILED) {
+    if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 2", api_name);
         TEST_END();
         return;
     }
     // Third thread attempted to acquire the shared lock but there is already another exclusive request in flight.
     assert_ERWLOCK_equals(&ReadWriteLock, 2, 1, 1, 1);
-    if(control.thread3_status == 1) {
+    if (control.thread3_status == 1) {
         TEST_FAILED();
         TEST_END();
         return;
@@ -221,9 +221,9 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     ExReleaseReadWriteLock(&ReadWriteLock);
 
     print("  Waiting for thread statuses to be at their final value.");
-    for(BYTE i = 0; i < 10; i++) {
+    for (BYTE i = 0; i < 10; i++) {
         TEST_FAILED(); // TODO: Why force fail here?
-        if( (control.thread2_status == 6) && (control.thread3_status == 2) ) {
+        if ((control.thread2_status == 6) && (control.thread3_status == 2)) {
             test_passed = 1; // TODO: test_passed should not be used here.
             break;
         }
