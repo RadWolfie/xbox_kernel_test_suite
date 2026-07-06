@@ -8,7 +8,7 @@ TEST_FUNC(AvSetSavedDataAddress)
     TEST_BEGIN();
 
     AvSetSavedDataAddress((void*) NULL);
-    test_passed = AvGetSavedDataAddress()==(void*) NULL ? 1 : 0;
+    TEST_GET_VAR = AvGetSavedDataAddress()==(void*) NULL ? 1 : 0;
 
     TEST_END();
 }

@@ -89,7 +89,7 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
         return;
     }
 
-    test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
+    TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
     if (TEST_IS_FAILED) {
         print("  ERROR: LockCount did not equal 1\n");
         TEST_FAILED();
@@ -104,7 +104,7 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
         print("  ERROR: The second thread was not supposed to write before the lock is released on the first thread.");
     }
     ExReleaseReadWriteLock(&ReadWriteLock);
-    test_passed = timed_poll_for_value(&control.thread2_status, 2);
+    TEST_GET_VAR = timed_poll_for_value(&control.thread2_status, 2);
     if (TEST_IS_FAILED) {
         print("  ERROR: thread2_status did not equal 2 before timing out.\n");
         TEST_FAILED();

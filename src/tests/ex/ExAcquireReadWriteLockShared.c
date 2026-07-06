@@ -134,7 +134,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     ExAcquireReadWriteLockExclusive(&ReadWriteLock);
     increment_thread2_cmd(&control, api_name);
 
-    test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
+    TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
     if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 1", api_name);
         TEST_END();
@@ -150,7 +150,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     }
 
     ExReleaseReadWriteLock(&ReadWriteLock);
-    test_passed = timed_poll_for_value(&control.thread2_status, 2);
+    TEST_GET_VAR = timed_poll_for_value(&control.thread2_status, 2);
     if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for thread2_status == 2", api_name);
         TEST_END();
@@ -161,7 +161,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     ExAcquireReadWriteLockShared(&ReadWriteLock);
     increment_thread2_cmd(&control, api_name);
 
-    test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
+    TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
     if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 1", api_name);
         TEST_END();
@@ -179,7 +179,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
 
     increment_thread2_cmd(&control, api_name);
     ExReleaseReadWriteLock(&ReadWriteLock);
-    test_passed = timed_poll_for_value(&control.thread2_status, 4);
+    TEST_GET_VAR = timed_poll_for_value(&control.thread2_status, 4);
     if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for thread2_status == 4", api_name);
         TEST_END();
@@ -190,7 +190,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     ExAcquireReadWriteLockShared(&ReadWriteLock);
     increment_thread2_cmd(&control, api_name);
 
-    test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
+    TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
     if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 1", api_name);
         TEST_END();
@@ -205,7 +205,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
         return;
     }
 
-    test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 2);
+    TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 2);
     if (TEST_IS_FAILED) {
         print("  ERROR: %s failed waiting for LockCount == 2", api_name);
         TEST_END();
@@ -224,7 +224,7 @@ TEST_FUNC(ExAcquireReadWriteLockShared)
     for (BYTE i = 0; i < 10; i++) {
         TEST_FAILED(); // TODO: Why force fail here?
         if ((control.thread2_status == 6) && (control.thread3_status == 2)) {
-            test_passed = 1; // TODO: test_passed should not be used here.
+            TEST_GET_VAR = 1; // TODO: TEST_GET_VAR should not be used here.
             break;
         }
         Sleep(10);
