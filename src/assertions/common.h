@@ -10,7 +10,7 @@
     api_name, \
     line_number \
 ) \
-    if(status != expected_status) { \
+    if (status != expected_status) { \
         print( \
             "  ERROR(line %d): Expected return status of function '%s' = 0x%x, got = 0x%x", \
             line_number, \

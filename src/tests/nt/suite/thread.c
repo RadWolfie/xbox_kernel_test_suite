@@ -8,8 +8,7 @@
 #include "util/exception.h"
 #include "assertions/defines.h"
 
-// TODO: Add below into nxdk's xboxkrnl/ntstatus.h file
-#define STATUS_SUSPEND_COUNT_EXCEEDED 0xC000004A
+#include "util/nxdk_patch.h" // TODO: Remove this line once STATUS_SUSPEND_COUNT_EXCEEDED is upstream.
 
 typedef struct {
     BOOL terminate;
@@ -82,7 +81,7 @@ static BOOL NtResumeSuspendThreadInline(const char* test_name, BOOL suspend, thr
 
     HANDLE hThread = CreateThread(NULL, 0, NtResumeSuspendThread_sync, (void*)&thread_data, (suspend ? CREATE_SUSPENDED : 0), NULL);
     GEN_CHECK(hThread != NULL, TRUE, "valid handle");
-    if(!hThread) {
+    if (!hThread) {
         print("  ERROR: Did not create thread");
         TEST_FAILED();
         THREAD_DUO_EVENTS_DESTROY(hEventMain, hEventThread);

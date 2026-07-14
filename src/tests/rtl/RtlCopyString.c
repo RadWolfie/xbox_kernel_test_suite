@@ -16,7 +16,7 @@ TEST_FUNC(RtlCopyString)
     RtlInitAnsiString(&dst_str, dst_char_arr);
     RtlCopyString(&dst_str, &src_str);
 
-    if(strncmp(src_str.Buffer, dst_char_arr, src_str.Length) != 0) {
+    if (strncmp(src_str.Buffer, dst_char_arr, src_str.Length) != 0) {
         TEST_FAILED();
     }
 

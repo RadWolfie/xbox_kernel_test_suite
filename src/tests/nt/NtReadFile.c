@@ -38,7 +38,6 @@ TEST_FUNC(NtReadFile)
         NtClose(handle);
         TEST_FAILED();
         TEST_END();
-        return;
     }
 
     status = NtReadFile(handle,

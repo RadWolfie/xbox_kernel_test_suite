@@ -39,8 +39,8 @@ static void increment_thread3_status(control_struct* control, const char* callin
 
 static BOOL timed_poll_for_value(ULONG* poll_var, ULONG wait_value)
 {
-    for(BYTE i = 0; i < 10; i++) {
-        if(*poll_var == wait_value) {
+    for (BYTE i = 0; i < 10; i++) {
+        if (*poll_var == wait_value) {
             return 1;
         }
         Sleep(10);
@@ -71,7 +71,6 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
     // Avoid spinning forever in the loop below.
     if (TEST_IS_FAILED) {
         TEST_END();
-        return;
     }
     ExReleaseReadWriteLock(&ReadWriteLock);
 
@@ -86,26 +85,24 @@ TEST_FUNC(ExAcquireReadWriteLockExclusive)
         print("  ERROR: did not create thread");
         TEST_FAILED();
         TEST_END();
-        return;
     }
 
-    test_passed = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
-    if(TEST_IS_FAILED) {
+    TEST_GET_VAR = timed_poll_for_value((ULONG*)&ReadWriteLock.LockCount, 1);
+    if (TEST_IS_FAILED) {
         print("  ERROR: LockCount did not equal 1\n");
         TEST_FAILED();
         TEST_END();
-        return;
     }
     // Second thread attempted to acquire the exclusive lock, incrementing WritersWaitingCount
     assert_ERWLOCK_equals(&ReadWriteLock, 1, 1, 0, 0);
 
-    if(control.thread2_status == 1) {
+    if (control.thread2_status == 1) {
         TEST_FAILED();
         print("  ERROR: The second thread was not supposed to write before the lock is released on the first thread.");
     }
     ExReleaseReadWriteLock(&ReadWriteLock);
-    test_passed = timed_poll_for_value(&control.thread2_status, 2);
-    if(TEST_IS_FAILED) {
+    TEST_GET_VAR = timed_poll_for_value(&control.thread2_status, 2);
+    if (TEST_IS_FAILED) {
         print("  ERROR: thread2_status did not equal 2 before timing out.\n");
         TEST_FAILED();
     }

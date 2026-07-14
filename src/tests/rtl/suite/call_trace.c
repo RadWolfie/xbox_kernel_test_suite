@@ -78,7 +78,8 @@ TEST_FUNC(RtlCaptureStackBackTrace)
     TEST_END();
 }
 
-void stub_RtlGetCallersAddress(PVOID* CallerAddress_test, PVOID* CallersCaller_test, PULONG CallerAddress_expected){
+void stub_RtlGetCallersAddress(PVOID* CallerAddress_test, PVOID* CallersCaller_test, PULONG CallerAddress_expected)
+{
     *CallerAddress_expected = (ULONG)__builtin_return_address(0);
     RtlGetCallersAddress(CallerAddress_test, CallersCaller_test);
 }
