@@ -106,7 +106,7 @@ unsigned long convert_test_api_input(char* test_str) {
         // If no match is found, then return a max value to skip add to the list.
         return ULONG_MAX;
     }
-    // Otherwise, we assumed the input is a hexadecimal string.
+    // Otherwise, we assumed the input is a decimal string.
     return strtoul(test_str, NULL, 10) - 1;
 }
 
