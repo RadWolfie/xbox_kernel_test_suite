@@ -10,6 +10,7 @@
 #include "util/output.h"
 
 BOOL output_video = FALSE; // NOTE: Must be set to a default of FALSE until config file is loaded and before video initialization.
+BOOL output_verbose = TRUE;
 
 static HANDLE output_filehandle = INVALID_HANDLE_VALUE;
 
