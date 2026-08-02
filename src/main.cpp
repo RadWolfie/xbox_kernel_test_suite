@@ -106,8 +106,8 @@ unsigned long convert_test_api_input(char* test_str) {
         // If no match is found, then return a max value to skip add to the list.
         return ULONG_MAX;
     }
-    // Otherwise, we assumed the input is a hexadecimal string.
-    return strtoul(test_str, NULL, 10);
+    // Otherwise, we assumed the input is a decimal string.
+    return strtoul(test_str, NULL, 10) - 1;
 }
 
 int load_conf_file(const char *file_path)
@@ -218,7 +218,7 @@ static void run_tests()
     print("-------------------------------------------------------------");
     for (int i = 0; i < kernel_api_tests_size; i++) {
         if (tests_to_run.test(i)) {
-            kernel_api_tests[i].func(i, kernel_api_tests[i].name);
+            kernel_api_tests[i].func(i + 1, kernel_api_tests[i].name);
         }
     }
     print("------------------------ End of Tests -----------------------");

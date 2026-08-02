@@ -37,7 +37,6 @@ typedef struct {
 
 static kernel_api_test kernel_api_tests[] =
 {
-    GEN_API_TEST(panic),                                     // 0x0000 (0) NULL
     GEN_API_TEST(AvGetSavedDataAddress),                     // 0x0001 (1)
     GEN_API_TEST(AvSendTVEncoderOption),                     // 0x0002 (2)
     GEN_API_TEST(AvSetDisplayMode),                          // 0x0003 (3)
