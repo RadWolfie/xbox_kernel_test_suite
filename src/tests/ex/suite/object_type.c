@@ -9,7 +9,7 @@ TEST_FUNC(ExEventObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&ExEventObjectType, 'vevE', FALSE, FALSE, FALSE);
+    test_passed &= assert_object_type(&ExEventObjectType, 'vevE', FALSE, FALSE, FALSE, TEST_GET_API_NAME);
     HANDLE event_handle = CreateEventA(NULL, TRUE, FALSE, "ExEventObjectType");
     GEN_CHECK(event_handle != INVALID_HANDLE_VALUE, TRUE, "event_handle");
     if (event_handle != INVALID_HANDLE_VALUE) {
@@ -25,7 +25,7 @@ TEST_FUNC(ExMutantObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&ExMutantObjectType, 'atuM', FALSE, TRUE, FALSE);
+    test_passed &= assert_object_type(&ExMutantObjectType, 'atuM', FALSE, TRUE, FALSE, TEST_GET_API_NAME);
     HANDLE mutant_handle = CreateMutexA(NULL, TRUE, "ExMutantObjectType");
     GEN_CHECK(mutant_handle != INVALID_HANDLE_VALUE, TRUE, "mutant_handle");
     if (mutant_handle != INVALID_HANDLE_VALUE) {
@@ -41,7 +41,7 @@ TEST_FUNC(ExSemaphoreObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&ExSemaphoreObjectType, 'ameS', FALSE, FALSE, FALSE);
+    test_passed &= assert_object_type(&ExSemaphoreObjectType, 'ameS', FALSE, FALSE, FALSE, TEST_GET_API_NAME);
     HANDLE semaphore_handle = CreateSemaphore(NULL, 0, 1, "ExSemaphoreObjectType");
     GEN_CHECK(semaphore_handle != INVALID_HANDLE_VALUE, TRUE, "semaphore_handle");
     if (semaphore_handle != INVALID_HANDLE_VALUE) {
@@ -57,7 +57,7 @@ TEST_FUNC(ExTimerObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&ExTimerObjectType, 'emiT', FALSE, TRUE, FALSE);
+    test_passed &= assert_object_type(&ExTimerObjectType, 'emiT', FALSE, TRUE, FALSE, TEST_GET_API_NAME);
     // NOTE: There's no such thing as CreateTimer for Windows, it is done through SetTimer.
     ANSI_STRING obj_name;
     RtlInitAnsiString(&obj_name, "ExTimerObjectType");

@@ -17,7 +17,7 @@ TEST_FUNC(PsThreadObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&PsThreadObjectType, 'erhT', FALSE, FALSE, FALSE);
+    test_passed &= assert_object_type(&PsThreadObjectType, 'erhT', FALSE, FALSE, FALSE, TEST_GET_API_NAME);
     HANDLE thread_handle = CreateThread(NULL, 0, dummy_thread, NULL, 0, NULL);
     GEN_CHECK(thread_handle != INVALID_HANDLE_VALUE, TRUE, "thread_handle");
     if (thread_handle != INVALID_HANDLE_VALUE) {

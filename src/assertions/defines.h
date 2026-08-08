@@ -2,13 +2,14 @@
 
 #include "util/output.h"
 
-#define ASSERT_HEADER BOOL test_passed = 1;
+#define ASSERT_HEADER(test_name) \
+    BOOL test_passed = 1
 
 #define ASSERT_FOOTER(test_name) \
     if (!test_passed) { \
         print("  Test '%s' FAILED", test_name); \
     } \
-    return test_passed;
+    return test_passed
 
 #define GEN_CHECK_EX(check_var, expected_var, varname, func_line) \
     if ((check_var) != (expected_var)) { \
