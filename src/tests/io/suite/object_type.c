@@ -11,7 +11,7 @@ TEST_FUNC(IoCompletionObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&IoCompletionObjectType, 'pmoC', FALSE, TRUE, FALSE);
+    test_passed &= assert_object_type(&IoCompletionObjectType, 'pmoC', FALSE, TRUE, FALSE, TEST_GET_API_NAME);
     HANDLE completion_handle;
     NTSTATUS status = NtCreateIoCompletion(&completion_handle, STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3, NULL, 0);
     GEN_CHECK(completion_handle != INVALID_HANDLE_VALUE, TRUE, "completion_handle");
@@ -34,7 +34,7 @@ TEST_FUNC(IoDeviceObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&IoDeviceObjectType, 'iveD', FALSE, FALSE, TRUE);
+    test_passed &= assert_object_type(&IoDeviceObjectType, 'iveD', FALSE, FALSE, TRUE, TEST_GET_API_NAME);
     ANSI_STRING obj_name;
     RtlInitAnsiString(&obj_name, "\\Device\\IoDeviceObjectType");
     NTSTATUS status = IoCreateDevice(&dummy_driver_object, 0, &obj_name, FILE_DEVICE_CD_ROM, FALSE, &dummy_device_object);
@@ -62,7 +62,7 @@ TEST_FUNC(IoFileObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&IoFileObjectType, 'eliF', TRUE, TRUE, TRUE);
+    test_passed &= assert_object_type(&IoFileObjectType, 'eliF', TRUE, TRUE, TRUE, TEST_GET_API_NAME);
     HANDLE file_handle = CreateFileA("D:\\IoFileObjectType",
                                      GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                                      NULL,

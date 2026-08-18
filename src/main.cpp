@@ -27,6 +27,7 @@ extern "C" {
 
 // defined in util/output.h file, used privately here only
 extern "C" BOOL output_video;
+extern "C" BOOL output_verbose;
 // Initialize the actual default values here if the config file is either successfully loaded before reading inputs or it failed to load.
 static void init_default_values()
 {
@@ -186,6 +187,9 @@ int load_conf_file(const char *file_path)
             size_t length = strlen(value);
             submitter = (char*)calloc(length + 1, sizeof(char));
             strncpy(submitter, value, length);
+        }
+        if (strcmp("disable-verbose", current_key) == 0) {
+            output_verbose = !strtoul(strtok(NULL, NEWLINE_DELIMITER), NULL, 10);
         }
     }
 

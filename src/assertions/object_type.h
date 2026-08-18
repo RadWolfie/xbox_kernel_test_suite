@@ -8,9 +8,10 @@ static BOOL assert_object_type_ex(POBJECT_TYPE object_type,
                                   BOOL has_close,
                                   BOOL has_delete,
                                   BOOL has_parse,
+                                  const char* test_name,
                                   int func_line)
 {
-    ASSERT_HEADER;
+    ASSERT_HEADER(test_name);
 
     BOOLEAN is_address_valid;
     GEN_CHECK_EX(object_type->AllocateProcedure, ExAllocatePoolWithTag, ".AllocateProcedure", func_line);
@@ -34,16 +35,17 @@ static BOOL assert_object_type_ex(POBJECT_TYPE object_type,
     // NOTE: DefaultObject check has been moved to assert_object_header_type_ex function. Because it needs the object's address.
     GEN_CHECK_EX(object_type->PoolTag, pool_tag, ".PoolTag", func_line);
 
-    return test_passed;
+    ASSERT_FOOTER(test_name);
 }
-#define assert_object_type(object_type, pool_tag, has_close, has_delete, has_parse) \
-    assert_object_type_ex(object_type, pool_tag, has_close, has_delete, has_parse, __LINE__)
+#define assert_object_type(object_type, pool_tag, has_close, has_delete, has_parse, test_name) \
+    assert_object_type_ex(object_type, pool_tag, has_close, has_delete, has_parse, test_name, __LINE__)
 
 static BOOL assert_object_header_type_ex(POBJECT_TYPE object_type,
                                          HANDLE object_handle,
+                                         const char* test_name,
                                          int func_line)
 {
-    ASSERT_HEADER;
+    ASSERT_HEADER(test_name);
 
     PVOID type_object;
     NTSTATUS status = ObReferenceObjectByHandle(object_handle, object_type, &type_object);
@@ -67,7 +69,7 @@ static BOOL assert_object_header_type_ex(POBJECT_TYPE object_type,
         ObfDereferenceObject(type_object);
     }
 
-    return test_passed;
+    ASSERT_FOOTER(test_name);
 }
 #define assert_object_header_type(object_type, object_handle) \
-    assert_object_header_type_ex(object_type, object_handle, __LINE__)
+    assert_object_header_type_ex(object_type, object_handle, #object_handle "_header", __LINE__)

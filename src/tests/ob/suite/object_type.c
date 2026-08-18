@@ -9,7 +9,7 @@ TEST_FUNC(ObDirectoryObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&ObDirectoryObjectType, 'eriD', FALSE, FALSE, FALSE);
+    test_passed &= assert_object_type(&ObDirectoryObjectType, 'eriD', FALSE, FALSE, FALSE, TEST_GET_API_NAME);
     OBJECT_ATTRIBUTES obj_attr;
     InitializeObjectAttributes(&obj_attr, NULL, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory(), NULL);
     HANDLE directory_handle;
@@ -27,7 +27,7 @@ TEST_FUNC(ObSymbolicLinkObjectType)
 {
     TEST_BEGIN();
 
-    test_passed &= assert_object_type(&ObSymbolicLinkObjectType, 'bmyS', FALSE, TRUE, FALSE);
+    test_passed &= assert_object_type(&ObSymbolicLinkObjectType, 'bmyS', FALSE, TRUE, FALSE, TEST_GET_API_NAME);
     ANSI_STRING obj_name;
     RtlInitAnsiString(&obj_name, "\\??\\A:");
     bool is_mount = nxMountDrive(obj_name.Buffer[4], "\\Device\\CdRom0");

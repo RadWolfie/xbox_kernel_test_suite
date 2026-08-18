@@ -51,7 +51,7 @@ static DWORD NTAPI NtResumeSuspendThread_sync(void* arg)
 
 static BOOL NtResumeSuspendThreadInline(const char* test_name, BOOL suspend, thread_test* thread_tests, unsigned total)
 {
-    ASSERT_HEADER;
+    ASSERT_HEADER(test_name);
 
     HANDLE hEventMain, hEventThread;
     THREAD_DUO_EVENTS_CREATE(hEventMain, hEventThread, FALSE);

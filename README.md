@@ -20,6 +20,7 @@ The following list of options can be used inside the config.txt file:
 - `tests` = `<decimal (support up to 378) or case insensitive API name>[,...]`
 - `tests-exclude` = `<decimal (support up to 378) or case insensitive API name>[,...]`
 - `disable-video` = `<boolean>`[^1]
+- `disable-verbose` = `<boolean>`[^1]
 
 [^1]: boolean value can be 1 or 0
 

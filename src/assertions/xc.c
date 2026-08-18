@@ -10,7 +10,7 @@ BOOL assert_hashed_result_ex(
     const char *test_name,
     int line_number)
 {
-    ASSERT_HEADER
+    ASSERT_HEADER(test_name);
     unsigned char sha1_ctx[116] = {0};
     unsigned char digest[20] = {0};
 
@@ -20,5 +20,5 @@ BOOL assert_hashed_result_ex(
 
     GEN_CHECK_ARRAY_EX(digest, expected_result, 20, test_name, line_number)
 
-    return test_passed;
+    ASSERT_FOOTER(test_name);
 }

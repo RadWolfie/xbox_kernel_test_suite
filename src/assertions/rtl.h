@@ -29,10 +29,10 @@ assert_critical_section_equals_ex( \
 )
 
 BOOL assert_ansi_string_ex(
-    PANSI_STRING,
+    const ANSI_STRING*,
     USHORT,
     USHORT,
-    PCHAR,
+    PCSTR,
     const char*,
     int
 );
@@ -53,10 +53,10 @@ test_passed &= assert_ansi_string_ex( \
 )
 
 BOOL assert_unicode_string_ex(
-    PUNICODE_STRING,
+    const UNICODE_STRING*,
     USHORT,
     USHORT,
-    PWSTR,
+    PCWSTR,
     const char*,
     int
 );

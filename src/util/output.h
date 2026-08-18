@@ -26,3 +26,8 @@ void print_test_footer(int, const char*, BOOL, const char*);
 BOOL open_output_file(const char*);
 int write_to_output_file(void*, DWORD);
 void close_output_file();
+
+static inline BOOL get_verbose_value() {
+    extern BOOL output_verbose;
+    return output_verbose;
+}
